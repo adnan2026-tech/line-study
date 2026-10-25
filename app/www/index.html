@@ -1,0 +1,1308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1214">
+<title>Line Study</title>
+<link rel="stylesheet" href="fonts/fonts.css" onerror="this.remove()">
+<style>
+
+/* Layout: phone-first single column (max 760px). Camera screens put the video stage first; analysis screens lead with a summary, then the ranked improvement list, then replay and detail. Single dark theme by design (shop-floor camera tool). */
+/* Layout: phone-first app shell. Sticky top bar (brand + user menu), one content column (max 760px).
+   A standard opens with a header and a tab strip (Overview · Video · Job breakdown · Visual instruction).
+   Camera and replay surfaces stay dark; everything else is light and high-contrast for factory lighting. */
+:root{
+  --bg:#edf1ee; --panel:#ffffff; --panel-2:#f2f5f3; --ink:#14221f; --muted:#56655f; --line:#d5ded9;
+  --accent:#0d7a71; --accent-dk:#095e57; --accent-ink:#ffffff; --accent-soft:#dcefeb;
+  --ok:#178a4a; --slow:#b9650a; --method:#a33aa0; --miss:#d1352a; --fast:#2d6cd1; --ghost:#f2f5f4;
+  --dark:#0f1716; --dark-ink:#e8eeec;
+  --abh:57px;
+  --shadow:0 1px 2px rgba(18,40,35,.06),0 6px 18px rgba(18,40,35,.06);
+  --f-display:"Barlow Condensed","Noto Sans Bengali","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Noto Sans Bengali",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+.wrap>*,.panel>*{min-width:0;max-width:100%}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+body{padding-bottom:env(safe-area-inset-bottom,0px)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.ic.lg{width:40px;height:40px;stroke-width:1.6;color:var(--muted)}
+
+/* top bar */
+.appbar{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.appbar-in{max-width:760px;margin:0 auto;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.brand{display:flex;align-items:center;gap:10px;text-align:left;background:none;border:0;padding:0;cursor:pointer}
+.brand .logo{width:36px;height:36px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;flex:none}
+.brand .logo svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round}
+.brand b{display:block;font-family:var(--f-display);font-weight:700;font-size:22px;letter-spacing:.02em;text-transform:uppercase;line-height:1}
+.brand small{display:block;font-size:11px;color:var(--muted);letter-spacing:.04em;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42vw}
+.brand>span:last-child{min-width:0}
+.userbar{display:flex;align-items:center;gap:6px;min-width:0;flex:none;max-width:50%}
+.brand{min-width:0;flex:1 1 auto}
+@media (max-width:440px){.uchip i{display:none}}
+.uchip{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);font-weight:600;font-size:13px;cursor:pointer;max-width:100%;min-width:0}
+.uchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.uchip i{font-style:normal;color:var(--muted);font-weight:500}
+
+.wrap{max-width:760px;margin:0 auto;padding-inline:14px;padding-block:14px 48px;display:flex;flex-direction:column;gap:12px}
+h1{font-family:var(--f-display);font-weight:700;font-size:30px;line-height:1.05;text-transform:uppercase;margin:0;text-wrap:balance;letter-spacing:.01em}
+h2{font-family:var(--f-display);font-weight:700;font-size:20px;text-transform:uppercase;letter-spacing:.03em;margin:0;line-height:1.1}
+h2 .of{color:var(--muted);font-weight:600}
+h3{font-size:15px;font-weight:600;margin:0}
+.lead{color:var(--muted);margin:2px 0 0;max-width:62ch}
+.note{font-size:12.5px;color:var(--muted);margin:0}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0;box-shadow:var(--shadow)}
+.panel.flush{padding:0;overflow:hidden}
+.panel .pad{padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px}
+.panel.guide{border:2px solid var(--accent)}
+.panel.empty{align-items:center;text-align:center;padding:28px 18px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row.between{justify-content:space-between}
+.col{display:flex;flex-direction:column;gap:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.lbl{font-size:12.5px;font-weight:600;color:var(--muted)}
+input[type=text],input[type=number],input[type=password],select,textarea{width:100%;min-height:46px;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+input[disabled],textarea[disabled]{background:var(--panel-2);color:var(--muted)}
+textarea{min-height:70px;resize:vertical;line-height:1.4}
+.btn{min-height:46px;padding:8px 16px;border-radius:12px;border:1.5px solid var(--line);background:#fff;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;color:var(--ink)}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:active{background:var(--accent-dk)}
+.btn.big{min-height:58px;font-family:var(--f-display);font-size:21px;text-transform:uppercase;letter-spacing:.05em;flex:1}
+.btn.stop{background:var(--miss);border-color:var(--miss);color:#fff}
+.btn.sm{min-height:40px;padding:4px 12px;font-size:13.5px;border-radius:10px}
+.btn.sm .ic{width:17px;height:17px}
+.btn.ghost{background:none;border-color:transparent}
+.btn.danger{color:var(--miss)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.link{background:none;border:0;color:var(--accent);font-weight:600;cursor:pointer;padding:6px 0;min-height:38px;text-align:left}
+.seg{display:flex;border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+.seg button{flex:1;min-height:44px;border:0;background:none;font-weight:600;font-size:13.5px;cursor:pointer;padding:4px 10px}
+.seg button+button{border-left:1.5px solid var(--line)}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.seg.sm button{min-height:38px;font-size:13px}
+details.more summary{cursor:pointer;font-weight:600;color:var(--accent);min-height:36px;display:flex;align-items:center}
+details.more[open]{display:flex;flex-direction:column;gap:8px}
+
+/* standard header + tabs */
+.sthead{display:flex;flex-direction:column;gap:2px}
+/* home */
+.hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#0a3431 0%,#0d7a71 62%,#2b9c8e 100%);color:#fff;border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow)}
+.hero::after{content:"";position:absolute;right:-46px;top:-46px;width:190px;height:190px;border-radius:50%;border:30px solid rgba(255,255,255,.07);pointer-events:none}
+.hero .eyebrow{color:#bfe8e1}.hero h1{color:#fff;font-size:32px}.hero p{margin:4px 0 0;color:#d6efea}
+.hstats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hstats div{background:rgba(255,255,255,.13);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;min-width:0}
+.hstats b{font-family:var(--f-display);font-size:28px;line-height:1}.hstats span{font-size:12px;color:#d6efea}
+.quick{display:grid;grid-template-columns:1fr;gap:8px}
+.qa{display:flex;align-items:center;gap:14px;min-height:76px;padding:12px 16px;border-radius:14px;border:1.5px solid var(--line);background:var(--panel);text-align:left;cursor:pointer;box-shadow:var(--shadow);color:var(--ink)}
+.qa .ic{width:30px;height:30px}.qa.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.qa b{display:block;font-family:var(--f-display);font-size:21px;line-height:1.1;text-transform:uppercase;letter-spacing:.04em}.qa small{display:block;opacity:.82;font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tile{--tc:var(--accent);display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:14px;min-height:122px;border-radius:14px;border:1px solid var(--line);background:var(--panel);text-align:left;cursor:pointer;box-shadow:var(--shadow);color:var(--ink);min-width:0}
+.tile:active,.qa:active{transform:translateY(1px)}
+.tile .ti{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--tc) 14%,#fff);color:var(--tc)}
+.tile b{font-size:15px;line-height:1.2}.tile .note{font-size:12px;margin:0}
+.t2{--tc:#c2410c}.t3{--tc:#2d6cd1}.t4{--tc:#a33aa0}.t5{--tc:#178a4a}.t6{--tc:#b9650a}.t7{--tc:#56655f}
+.sec-lbl{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:4px 2px -4px}
+@media(min-width:560px){.quick{grid-template-columns:1fr 1fr}}
+@media(min-width:720px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.pick{display:flex;flex-direction:column;gap:6px;max-height:60vh;overflow:auto}
+/* approval codes */
+.code{font-family:var(--f-mono);font-size:28px;font-weight:600;letter-spacing:.12em;text-align:center;background:var(--panel-2);border:1.5px dashed var(--accent);border-radius:12px;padding:12px;user-select:all;color:var(--accent-dk)}
+.codein{font-family:var(--f-mono);font-size:22px;letter-spacing:.1em;text-transform:uppercase;text-align:center}
+.wait{display:flex;gap:10px;align-items:flex-start;background:#fff7e6;border:1px solid #f0d49b;border-radius:12px;padding:10px 12px}
+/* snap */
+.snap{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.snap img{width:104px;height:78px;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--dark)}
+.tabs{position:sticky;top:calc(var(--abh) + env(safe-area-inset-top,0px));z-index:15;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:4px;box-shadow:var(--shadow);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{min-height:54px;padding:6px 4px;border-radius:10px;border:0;background:none;font-weight:600;font-size:12px;line-height:1.15;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;text-align:center;min-width:0}
+.tabs button.on{background:var(--accent-soft);color:var(--accent-dk)}
+.tabs .ic{width:18px;height:18px}
+
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:4px;box-shadow:var(--shadow)}
+.step b{font-family:var(--f-display);font-size:30px;color:var(--accent);line-height:1}
+.list{display:flex;flex-direction:column}
+.item{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:12px 2px;border:0;border-bottom:1px solid var(--line);background:none;width:100%;text-align:left;cursor:pointer;flex-wrap:wrap}
+.item:last-child{border-bottom:0}
+.item .meta{color:var(--muted);font-size:13px}
+.item-main{min-width:0;flex:1}
+.chip{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip.factory,.chip.vid{color:var(--accent);border-color:var(--accent)}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;white-space:nowrap}
+.st::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--c)}
+.kpb{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;color:#fff;background:var(--c);margin-right:4px;white-space:nowrap}
+
+/* camera + video surfaces (dark) */
+.stage{position:relative;width:100%;border-radius:14px;overflow:hidden;background:#000;aspect-ratio:4/3;max-height:60vh;margin:0 auto}
+.stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.stage.mirror video,.stage.mirror canvas{transform:scaleX(-1)}
+.hud{position:absolute;left:10px;right:10px;top:10px;display:flex;justify-content:space-between;gap:8px;pointer-events:none;flex-wrap:wrap}
+.pill{font-family:var(--f-display);font-weight:700;font-size:19px;text-transform:uppercase;letter-spacing:.03em;padding:4px 12px;border-radius:999px;background:rgba(0,0,0,.6);color:#fff}
+.pill.rec{background:rgba(209,53,42,.9)}
+.count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:700;font-size:120px;color:#fff;text-shadow:0 4px 20px rgba(0,0,0,.6);pointer-events:none}
+.msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;gap:8px;background:rgba(10,16,15,.86)}
+.msg .note{color:var(--dark-ink);font-size:14px}
+.vstage{position:relative;background:#000;width:100%}
+.vstage video{width:100%;max-height:56vh;display:block;object-fit:contain;background:#000}
+.player .vstage canvas{position:absolute;inset:0;width:100%;height:100%;max-height:none;margin:0;aspect-ratio:auto;pointer-events:none;background:transparent;border-radius:0}
+.pinv{position:sticky;top:calc(var(--abh) + env(safe-area-inset-top,0px));z-index:12}
+.pinv .vstage video{max-height:32vh}
+.pinv .pctl{padding-bottom:10px}
+body.typing .pinv .vstage video{max-height:22vh}
+body.typing .pinv .pctl{display:none}
+body.typing .pinv .player>canvas{max-height:22vh}
+.vcap{position:absolute;left:10px;bottom:10px;max-width:calc(100% - 20px);background:rgba(0,0,0,.66);color:#fff;border-radius:8px;padding:4px 10px;font-weight:600;font-size:14px;pointer-events:none}
+.vcap:empty{display:none}
+.vmsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;background:rgba(10,16,15,.88);color:#fff;font-size:14px;font-weight:600}
+.bar{height:8px;border-radius:4px;background:var(--panel-2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.bar i.over{background:var(--slow)}
+.player>canvas{width:100%;aspect-ratio:4/3;background:var(--dark);border-radius:12px;display:block}
+.pinv .player>canvas{max-height:32vh;width:auto;margin:0 auto}
+.panel.flush .player>canvas{border-radius:0}
+.pctl{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.panel.flush .pctl{padding:10px 14px 0}
+.pctl input[type=range]{flex:1 1 120px;min-width:0;accent-color:var(--accent);min-height:36px}
+.pctl .time{font-family:var(--f-mono);font-size:12px;color:var(--muted);min-width:11ch;text-align:right}
+.tl{position:relative;height:44px;border-radius:10px;background:var(--panel-2);overflow:hidden;cursor:pointer;touch-action:manipulation;border:1px solid var(--line)}
+.tl .blk{position:absolute;top:0;bottom:0;border-right:2px solid #fff;display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:11px;color:#0b1513;font-weight:600;overflow:hidden}
+.tl .out{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,rgba(20,34,31,.5),rgba(20,34,31,.5) 4px,rgba(20,34,31,.3) 4px,rgba(20,34,31,.3) 8px)}
+.tl .ph{position:absolute;top:-2px;bottom:-2px;width:3px;background:var(--ink);box-shadow:0 0 0 1px #fff;pointer-events:none}
+.tl .mk{position:absolute;top:0;width:2px;height:10px;background:var(--slow)}
+.tl-lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--panel-2);font-weight:700}
+td.r,th.r{text-align:right}
+td.num,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+tr.sel td{background:var(--accent-soft)}
+tr.click{cursor:pointer}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.stat b{font-family:var(--f-display);font-size:30px;font-weight:700;line-height:1}
+.stat span{font-size:12px;color:var(--muted)}
+.imp{display:flex;flex-direction:column;gap:8px}
+.imp-item{display:grid;grid-template-columns:5px 1fr auto;gap:4px 12px;padding:10px 12px 10px 0;background:var(--panel-2);border-radius:12px;cursor:pointer;border:0;text-align:left;width:100%}
+.imp-item .sev{grid-row:1/3;background:var(--c);border-radius:12px 0 0 12px}
+.imp-item .t{font-weight:600}
+.imp-item .lost{font-family:var(--f-mono);font-size:13px;color:var(--c);text-align:right;font-weight:600}
+.imp-item .d{grid-column:2/4;font-size:13px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:16px;height:3px;background:var(--c);display:inline-block}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--c),var(--c) 4px,transparent 4px,transparent 7px)}
+.cur-el{font-family:var(--f-display);font-weight:700;font-size:20px;text-transform:uppercase}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:#fff;padding:11px 16px;border-radius:10px;font-size:14px;z-index:60;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
+.busy{position:fixed;inset:0;background:rgba(10,16,15,.82);color:#fff;display:flex;align-items:center;justify-content:center;z-index:55;font-family:var(--f-display);font-size:24px;text-transform:uppercase;letter-spacing:.05em;text-align:center;padding:20px}
+.check{display:flex;gap:10px;align-items:center;min-height:42px}
+.check input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.check.sm{min-height:34px;font-size:13px;font-weight:600}
+.kchip{min-height:40px;padding:4px 14px;border-radius:999px;border:1.5px solid var(--line);background:#fff;font-weight:600;font-size:13px;cursor:pointer}
+.kchip.on{background:var(--c);border-color:var(--c);color:#fff}
+.jstep,.vistep{gap:10px}
+.jstep h2,.vistep h2{display:flex;align-items:center;gap:8px}
+.sn{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-family:var(--f-mono);font-size:15px;font-weight:600;flex:none}
+.picbox{border-radius:12px;overflow:hidden;background:var(--panel-2);border:1px solid var(--line)}
+.picbox canvas{display:block;width:100%;height:auto}
+.picbox.small{max-width:260px}
+.nopic{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:150px;color:var(--muted);font-size:13px}
+.savestate{font-size:12px;color:var(--muted);font-family:var(--f-mono)}
+.chapters{display:flex;flex-direction:column;gap:6px}
+.chap{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:10px;min-height:48px;padding:6px 10px;border-radius:12px;border:1.5px solid var(--line);background:#fff;cursor:pointer;text-align:left}
+.chap .n{width:28px;height:28px;border-radius:50%;background:var(--panel-2);display:flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-weight:600}
+.chap.on{border-color:var(--accent);background:var(--accent-soft)}
+.chap.on .n{background:var(--accent);color:#fff}
+.chap .num{font-size:12px;color:var(--muted)}
+.menu{position:fixed;inset:0;z-index:40;background:rgba(10,16,15,.45);display:flex;align-items:flex-start;justify-content:flex-end;padding:calc(62px + env(safe-area-inset-top,0px)) 14px 14px}
+.menu .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;min-width:240px;padding:6px;display:flex;flex-direction:column;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.menu .box button{background:none;border:0;text-align:left;padding:12px 14px;min-height:48px;border-radius:10px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:10px}
+.menu .box button:hover,.menu .box button:focus-visible{background:var(--panel-2)}
+.menu .box .who{padding:10px 14px;border-bottom:1px solid var(--line);margin-bottom:4px;font-size:13px;color:var(--muted)}
+.modal{position:fixed;inset:0;z-index:45;background:rgba(10,16,15,.6);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal .box{background:var(--panel);border-radius:16px;padding:18px;max-width:380px;width:100%;display:flex;flex-direction:column;gap:12px;max-height:94vh;overflow:auto}
+.modal .box.wide{max-width:680px}
+.modal .box input[type=range]{width:100%;accent-color:var(--accent);min-height:36px}
+.modal.full{padding:0;background:var(--dark)}
+.markup{width:100%;height:100%;display:flex;flex-direction:column;color:var(--dark-ink);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.markup .mk-top{padding:10px 14px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.markup .mk-top .note{color:#b9c6c2}
+.markup .mk-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 8px}
+.markup canvas{max-width:100%;max-height:100%;width:auto;height:auto;touch-action:none;border-radius:6px;background:#000}
+.markup .mk-tools{padding:10px 14px 14px;display:flex;flex-direction:column;gap:10px;background:#16211f}
+.markup .seg{background:#16211f;border-color:#2c3b38}
+.markup .seg button{color:var(--dark-ink)}
+.markup .seg button+button{border-color:#2c3b38}
+.markup .btn{background:#1f2c29;border-color:#2c3b38;color:var(--dark-ink)}
+.markup .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.swatch{width:40px;height:40px;border-radius:50%;border:3px solid #2c3b38;background:var(--c);cursor:pointer}
+.swatch.on{border-color:#fff;box-shadow:0 0 0 2px var(--accent)}
+.login{max-width:420px;margin:5vh auto 0;width:100%}
+.role{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.role.admin{color:var(--accent);border-color:var(--accent)}
+ul.tips{margin:0;padding-left:18px;color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:3px}
+@media (min-width:640px){h1{font-size:34px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* Line Study additions */
+.stage.wide{aspect-ratio:16/9;max-height:62vh}
+.tabs.three{grid-template-columns:repeat(3,1fr)}
+.bar.big{height:12px;border-radius:6px}
+.stat.bad b{color:var(--miss)}.stat.good b{color:var(--ok)}
+tr.bn td{background:#fff3e0}tr.skip td{color:var(--muted);text-decoration:line-through}tr.skip td:last-child{text-decoration:none}
+.legend i{height:3px}
+/* balance chart */
+.bal{--lw:38%;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:5px;padding-top:22px}
+.brow{display:flex;align-items:center;min-height:26px;gap:0}
+.brow .bl{width:var(--lw);flex:none;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px}
+.brow .bl b{color:var(--muted);font-weight:500;margin-right:2px}
+.brow .bt{flex:1;position:relative;height:22px;background:var(--panel-2);border-radius:5px;min-width:0}
+.brow .bt i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--accent)}
+.brow .bt i.p{background:#b8c4bf}
+.brow .bt i.bn{background:var(--slow)}
+.brow .bt em{position:absolute;left:6px;top:2px;font-style:normal;font-size:12px;font-weight:600;color:#fff;text-shadow:0 0 3px rgba(0,0,0,.5)}
+.brow .bt em small{font-weight:500;opacity:.9}
+.bal .takt{position:absolute;top:0;bottom:0;width:0;border-left:2px dashed var(--miss);z-index:2;pointer-events:none}
+.bal .takt span{position:absolute;top:0;left:4px;font-size:11px;font-weight:700;color:var(--miss);white-space:nowrap}
+/* operations editor */
+.opsed{display:flex;flex-direction:column;gap:6px}
+.oprow{display:grid;grid-template-columns:52px minmax(0,1fr) 90px 74px 56px 40px;gap:4px;align-items:center}
+.oprow input{min-height:42px;padding:6px 8px;font-size:14px}
+.oprow .btn{min-height:40px;padding:0 6px}
+@media(max-width:560px){.oprow{grid-template-columns:44px minmax(0,1fr) 64px 50px 34px;grid-template-areas:"no nm nm nm del" "no mc smv mp del"}.oprow input:nth-child(1){grid-area:no}.oprow input:nth-child(2){grid-area:nm}.oprow input:nth-child(3){grid-area:mc}.oprow input:nth-child(4){grid-area:smv}.oprow input:nth-child(5){grid-area:mp}.oprow .btn{grid-area:del}}
+/* zones */
+.seg.zt button{display:flex;align-items:center;justify-content:center;gap:6px}
+.seg.zt button i{width:12px;height:12px;border-radius:3px;background:var(--zc);flex:none}
+.seg.zt button.on{background:var(--zc);color:#fff}
+.seg.zt button.on i{background:#fff}
+.zstage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.zstage video{max-height:56vh}
+.vstage canvas.solo{position:static;display:block;width:100%;height:auto;max-height:56vh;object-fit:contain;background:#0f1716}
+/* motion lanes */
+.lanes{display:flex;flex-direction:column;gap:5px}
+.lane{display:grid;grid-template-columns:52px 1fr;align-items:center;gap:6px}
+.lane .ln{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.lt{position:relative;height:28px;border-radius:7px;background:var(--panel-2);overflow:hidden;cursor:pointer;border:1px solid var(--line)}
+.lt i{position:absolute;top:0;bottom:0}
+.lt .ph{position:absolute;top:-1px;bottom:-1px;width:3px;margin-left:-1px;background:var(--ink);box-shadow:0 0 0 1px #fff;pointer-events:none;z-index:3}
+.lt.cyl i.cy{background:#d6ebe7;border-right:1px solid #fff;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;font-family:var(--f-mono);font-weight:600;color:var(--accent-dk)}
+.lt.cyl i.cy.alt{background:#bfe0da}.lt.cyl i.cy.sk{background:repeating-linear-gradient(45deg,#eee,#eee 4px,#ddd 4px,#ddd 8px);color:var(--muted)}
+.lt.cyl em{position:absolute;top:0;bottom:0;width:2px;background:var(--slow);z-index:2}
+/* motion bars + cycle chart */
+.mbars{display:flex;flex-direction:column;gap:8px}
+.mbar{display:grid;grid-template-columns:86px 1fr;gap:8px;align-items:center}
+.mbar .ln{font-size:12.5px;font-weight:600}
+.mb{display:flex;height:30px;border-radius:7px;overflow:hidden;background:var(--panel-2)}
+.mb i{display:flex;align-items:center;justify-content:center;font-style:normal;font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-shadow:0 0 3px rgba(0,0,0,.35)}
+.cchart{position:relative;display:flex;align-items:flex-end;gap:4px;height:150px;padding-top:6px;border-bottom:1px solid var(--line)}
+.cc{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.cc i{width:100%;max-width:38px;background:var(--accent);border-radius:4px 4px 0 0}
+.cc i.hi{background:var(--slow)}
+.cc span{font-size:10px;color:var(--muted);margin-top:2px;position:absolute;bottom:-16px}
+.cchart{margin-bottom:18px}
+.cchart .avg{position:absolute;left:0;right:0;border-top:2px dashed var(--ink);height:0;pointer-events:none}
+.cchart .avg span{position:absolute;right:0;top:-18px;font-size:11px;font-weight:700;background:var(--panel);padding:0 4px}
+/* PDF pages (rendered off-screen) */
+.pdfpage{background:#fff;color:#14221f;padding:40px 44px;display:flex;flex-direction:column;gap:12px;position:relative;font-family:var(--f-body);font-size:13px}
+.pdfpage h1{font-size:30px}.pdfpage h2{font-size:18px;margin-top:6px;border-bottom:2px solid var(--accent);padding-bottom:3px}
+.ph1{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;border-bottom:3px solid var(--ink);padding-bottom:10px}
+.pe{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.pmeta{display:flex;flex-direction:column;gap:2px;font-size:12px;text-align:right}.pmeta b{color:#56655f;font-weight:600;margin-right:4px}
+.pstats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.pstats div{border:1px solid var(--line);border-radius:8px;padding:6px 10px;display:flex;flex-direction:column}
+.pstats b{font-family:var(--f-display);font-size:24px;line-height:1.1}.pstats span{font-size:11px;color:#56655f}
+.ptbl{font-size:11.5px}.ptbl th,.ptbl td{padding:5px 6px;white-space:normal}.ptbl tr.bn td{background:#fff3e0;font-weight:600}
+.pfind{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}.pfind i{color:var(--slow);font-style:normal;font-weight:600}
+.pbal{--lw:34%}
+.pfoot{position:absolute;left:44px;right:44px;bottom:18px;font-size:10px;color:#8a9893;border-top:1px solid var(--line);padding-top:4px}
+.bal .takt.lft span{left:auto;right:4px}
+</style>
+</head>
+<body>
+<header class="appbar"><div class="appbar-in">
+  <button class="brand" data-act="home" aria-label="Line Study home"><span class="logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 21v-6.5L4.6 11a1.6 1.6 0 0 1 2.6-1.8L9 11.5V4.5a1.5 1.5 0 0 1 3 0V10m0-4.5a1.5 1.5 0 0 1 3 0V10m0-3a1.5 1.5 0 0 1 3 0v7c0 3.5-2 7-6 7"/></svg></span><span><b>Line Study</b><small>Hand &amp; finger time study</small></span></button>
+  <div class="userbar" id="userbar"></div></div></header>
+<main id="app" class="wrap"></main>
+<div class="toast" id="toast" hidden></div>
+<div class="busy" id="busy" hidden>Working…</div>
+<div class="menu" id="menu" hidden></div>
+<div class="modal" id="modal" hidden></div>
+<script type="module">
+// Inside the Android app everything loads from the phone; on the web it loads from the internet.
+const NATIVE=!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+const NP=NATIVE?(window.Capacitor.Plugins||{}):{};
+const CDN=NATIVE?new URL("mediapipe",location.href).href:"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14";
+const HMODEL=NATIVE?CDN+"/hand_landmarker.task":"https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
+let HandLandmarker=null,FilesetResolver=null;
+if(!window.__HANDSTUB){try{({HandLandmarker,FilesetResolver}=await import(CDN+"/vision_bundle.mjs"))}catch(e){console.warn("tracking library not loaded",e)}}
+/*ENGINE-START*/
+/* ===== Hand-motion engine (no DOM) =====
+   Frames: [{t, a, b}] where a = operator's right hand and b = left hand, stored as flat [x0,y0,x1,y1,...] of 21 landmarks in thousandths of the image.
+   Zones are rectangles in image fractions: {type:"bin"|"needle"|"stack", x, y, w, h}.               */
+const MOT={S:{l:"Sew / use",c:"#178a4a",k:"va"},R:{l:"Reach",c:"#5b9be0",k:"nva"},G:{l:"Grasp / pick",c:"#2f6fb8",k:"nva"},M:{l:"Move",c:"#8f78dc",k:"nva"},
+  P:{l:"Position / align",c:"#e0a030",k:"nva"},D:{l:"Release / dispose",c:"#c2410c",k:"nva"},H:{l:"Hold",c:"#9aa8a3",k:"nva"},I:{l:"Idle / wait",c:"#d1352a",k:"waste"},U:{l:"Not visible",c:"#dfe5e2",k:"unk"}};
+const MORDER="SRGMPDHIU";
+const ZT={needle:{l:"Needle / work point",c:"#178a4a"},bin:{l:"Pick-up (bin)",c:"#2d6cd1"},stack:{l:"Finished stack",c:"#c2410c"}};
+const TH={still:0.5,fast:3.0,grip:1.5};
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const hyp=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const median=a=>{if(!a.length)return 0;const s=a.slice().sort((x,y)=>x-y);return s[s.length>>1]};
+const mean=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+const sd=a=>{if(a.length<2)return 0;const m=mean(a);return Math.sqrt(a.reduce((x,y)=>x+(y-m)*(y-m),0)/(a.length-1))};
+
+function handFeat(lm,ar){const p=i=>({x:lm[i*2]/1000*ar,y:lm[i*2+1]/1000});
+  const pal=[0,5,9,13,17].map(p);const c={x:pal.reduce((a,q)=>a+q.x,0)/5,y:pal.reduce((a,q)=>a+q.y,0)/5};
+  const sz=Math.max(1e-4,hyp(p(0),p(9)));
+  return{c,sz,grip:[8,12,16,20].reduce((a,i)=>a+hyp(p(i),c),0)/4/sz,pinch:hyp(p(4),p(8))/sz}}
+
+function zoneAt(zones,c,ar){if(!zones)return null;const x=c.x/ar,y=c.y;let hit=null;
+  for(const z of zones){if(x>=z.x&&x<=z.x+z.w&&y>=z.y&&y<=z.y+z.h){if(!hit||z.type==="needle")hit=z}}return hit?hit.type:null}
+
+// Per-hand features over the whole recording
+function trackFeatures(frames,ar,key,zones){
+  const n=frames.length,F=frames.map(f=>f[key]?handFeat(f[key],ar):null);
+  // fill short gaps (up to 5 frames) so a hand briefly lost behind fabric does not break motions
+  for(let i=0;i<n;i++){if(F[i])continue;let j=i;while(j<n&&!F[j])j++;if(i>0&&j<n&&F[i-1]&&j-i<=5){const A=F[i-1],B=F[j];for(let k=i;k<j;k++){const r=(k-i+1)/(j-i+1);
+      F[k]={c:{x:A.c.x+(B.c.x-A.c.x)*r,y:A.c.y+(B.c.y-A.c.y)*r},sz:A.sz,grip:A.grip+(B.grip-A.grip)*r,pinch:A.pinch+(B.pinch-A.pinch)*r,filled:true}}}i=j}
+  const sz=median(F.filter(Boolean).map(f=>f.sz))||0.1;
+  const T=frames.map(f=>f.t);
+  // smooth palm positions over ±80 ms: removes detector jitter before speeds are measured
+  const SC=F.map((f,i)=>{if(!f)return null;let x=0,y=0,c=0;for(let k=i;k>=0&&T[i]-T[k]<=80&&F[k];k--){x+=F[k].c.x;y+=F[k].c.y;c++}for(let k=i+1;k<n&&T[k]-T[i]<=80&&F[k];k++){x+=F[k].c.x;y+=F[k].c.y;c++}return{x:x/c,y:y/c}});
+  const win=(i,ms,dir)=>{let j=i;while(j+dir>=0&&j+dir<n&&Math.abs(T[j+dir]-T[i])<=ms&&F[j+dir])j+=dir;return j};
+  const v=new Array(n).fill(0),str=new Array(n).fill(1),dg=new Array(n).fill(0),zone=new Array(n).fill(null);
+  for(let i=0;i<n;i++){if(!F[i])continue;
+    const a=win(i,100,-1),b=win(i,100,1);const dt=(T[b]-T[a])/1000;if(dt>0){v[i]=hyp(SC[a],SC[b])/dt/sz;dg[i]=(F[b].grip-F[a].grip)/dt}
+    const a2=win(i,220,-1),b2=win(i,220,1);let path=0;for(let k=a2;k<b2;k++)path+=hyp(SC[k],SC[k+1]);str[i]=path>1e-6?hyp(SC[a2],SC[b2])/path:1;
+    zone[i]=zoneAt(zones,F[i].c,ar)}
+  // grip thresholds adapt to this person and camera angle
+  const g=F.filter(Boolean).map(f=>f.grip).sort((x,y)=>x-y);const lo=g.length?g[Math.floor(g.length*.1)]:0.8,hi=g.length?g[Math.floor(g.length*.9)]:1.8;
+  const cut=hi-lo>0.35?lo+0.45*(hi-lo):1.15;
+  const closed=F.map(f=>!!f&&(f.grip<cut||f.pinch<0.4));
+  return{F,sz,v,str,dg,zone,closed,T}}
+
+function classifyFrame(tf,i){const f=tf.F[i];if(!f)return"U";const v=tf.v[i],z=tf.zone[i],cl=tf.closed[i],dg=tf.dg[i];
+  if(v>=TH.fast)return cl?"M":"R";
+  if(z==="needle")return(tf.str[i]>=0.55||v<TH.still*2)?"S":"P";
+  if(z==="bin")return"G";
+  if(z==="stack")return"D";
+  if(dg<-TH.grip)return"G";if(dg>TH.grip)return"D";
+  if(v<TH.still)return cl?"H":"I";
+  return tf.str[i]>0.75?(cl?"M":"R"):"P"}
+
+function smoothLabels(lab,T){const n=lab.length,out=lab.slice();
+  // majority vote over about ±100 ms
+  for(let i=0;i<n;i++){const cnt={};for(let k=i;k>=0&&T[i]-T[k]<=100;k--)cnt[lab[k]]=(cnt[lab[k]]||0)+1;for(let k=i+1;k<n&&T[k]-T[i]<=100;k++)cnt[lab[k]]=(cnt[lab[k]]||0)+1;
+    let best=lab[i],bc=cnt[best]||0;for(const c in cnt)if(cnt[c]>bc){best=c;bc=cnt[c]}out[i]=best}
+  // merge pieces shorter than 150 ms into the longer neighbour
+  for(let pass=0;pass<3;pass++){const sg=segs(out,T);for(let s=0;s<sg.length;s++){const g=sg[s];if(g.e-g.s>=150||sg.length<2)continue;
+      const L=sg[s-1],R=sg[s+1];const to=!L?R.c:!R?L.c:(L.e-L.s>=R.e-R.s?L.c:R.c);for(let k=g.i0;k<=g.i1;k++)out[k]=to}}
+  return out}
+function segs(lab,T){const out=[];let s=0;const n=lab.length;
+  for(let i=1;i<=n;i++){if(i===n||lab[i]!==lab[s]){const st=s===0?T[0]:(T[s-1]+T[s])/2,en=i===n?T[n-1]:(T[i-1]+T[i])/2;out.push({c:lab[s],s:st,e:en,i0:s,i1:i-1});s=i}}return out}
+
+// Full analysis of one recording: motions per hand + automatic cycles
+function analyzeHands(frames,ar,zones){
+  const A=trackFeatures(frames,ar,"a",zones),B=trackFeatures(frames,ar,"b",zones);
+  const la=smoothLabels(frames.map((_,i)=>classifyFrame(A,i)),A.T),lb=smoothLabels(frames.map((_,i)=>classifyFrame(B,i)),B.T);
+  // re-grips: the hand closes again at the needle after being open for at least 150 ms
+  const rg={a:[],b:[]};for(const[k,tf,lab]of[["a",A,la],["b",B,lb]]){let openSince=null;for(let i=0;i<tf.T.length;i++){if(!tf.F[i]){openSince=null;continue}
+      if(!tf.closed[i]){if(openSince==null)openSince=tf.T[i]}else{if(openSince!=null&&tf.T[i]-openSince>=150&&lab[i]==="S")rg[k].push(tf.T[i]);openSince=null}}}
+  return{la,lb,A,B,rg,cycles:detectCycles(frames,A,B,zones,ar)}}
+
+function detectCycles(frames,A,B,zones,ar){const T=A.T,n=T.length;if(n<10)return{method:"none",cuts:[]};
+  const has=t=>(zones||[]).some(z=>z.type===t);const ez=has("stack")?"stack":has("bin")?"bin":null;
+  if(ez){const ev=[];
+    for(const tf of[A,B]){let lastOut=-1e9,inside=false;for(let i=0;i<n;i++){const z=tf.F[i]?tf.zone[i]:null;
+        if(z===ez){if(!inside&&T[i]-lastOut>=300)ev.push(T[i]);inside=true}else{if(inside)lastOut=T[i];inside=false;if(z!==ez&&tf.F[i])lastOut=Math.max(lastOut,T[i]-300)}}}
+    ev.sort((x,y)=>x-y);const m=[];for(const e of ev)if(!m.length||e-m[m.length-1]>1000)m.push(e);
+    if(m.length>=3){const g=median(m.slice(1).map((e,i)=>e-m[i]));const k=[m[0]];for(const e of m.slice(1))if(e-k[k.length-1]>=0.45*g)k.push(e);
+      if(k.length>=2)return{method:ez,cuts:k}}}
+  return periodCycles(frames,A,B)}
+
+function periodCycles(frames,A,B){const T=A.T,n=T.length,t0=T[0],t1=T[n-1],dt=100;const m=Math.floor((t1-t0)/dt);if(m<40)return{method:"none",cuts:[]};
+  // 10 Hz signal: both palm centres (in hand sizes), last known value carried forward
+  const sig=[];let ia=0,last=[0,0,0,0];for(let s=0;s<=m;s++){const t=t0+s*dt;while(ia<n-1&&T[ia+1]<=t)ia++;const fa=A.F[ia],fb=B.F[ia];
+    const v=[fa?fa.c.x/A.sz:last[0],fa?fa.c.y/A.sz:last[1],fb?fb.c.x/B.sz:last[2],fb?fb.c.y/B.sz:last[3]];last=v;sig.push(v)}
+  const D=L=>{let a=0,c=0;for(let s=0;s+L<=m;s++){const p=sig[s],q=sig[s+L];a+=(p[0]-q[0])**2+(p[1]-q[1])**2+(p[2]-q[2])**2+(p[3]-q[3])**2;c++}return c?a/c:1e9};
+  const Lmin=20,Lmax=Math.min(1200,Math.floor(m/2));if(Lmax<=Lmin)return{method:"none",cuts:[]};
+  const d=[];for(let L=Lmin;L<=Lmax;L++)d.push(D(L));const avg=mean(d);
+  let best=-1;for(let i=1;i<d.length-1;i++){if(d[i]<=d[i-1]&&d[i]<=d[i+1]&&d[i]<0.5*avg){best=i;break}}
+  if(best<0)return{method:"none",cuts:[]};const P=best+Lmin;
+  // reference: the stillest moment of the first period; then the closest match roughly one period later, again and again
+  const spd=s=>s>0?Math.hypot(...sig[s].map((x,k)=>x-sig[s-1][k])):0;
+  let ref=1;for(let s=1;s<Math.min(P,m);s++)if(spd(s)<spd(ref))ref=s;const R=sig[ref];const dist=s=>sig[s].reduce((a,x,k)=>a+(x-R[k])**2,0);
+  const cuts=[t0+ref*dt];let cur=ref;while(true){const a=cur+Math.round(P*.7),b=Math.min(m,cur+Math.round(P*1.3));if(a>m)break;let bs=a;for(let s=a;s<=b;s++)if(dist(s)+0.02*spd(s)<dist(bs)+0.02*spd(bs))bs=s;cuts.push(t0+bs*dt);cur=bs;if(b>=m)break}
+  return{method:"period",cuts:cuts.length>=2?cuts:[]}}
+
+// Statistics for a saved study (cycles = [{s,e}] in ms)
+function studyStats(st){const fr=st.frames,T=fr.map(f=>f.t),la=st.la,lb=st.lb;const cyc=st.cycles||[];
+  const hands=handNames();const per=[];
+  for(const c of cyc){const tot={a:{},b:{}};let va=0,regrip=0;
+    for(let i=0;i<fr.length;i++){if(T[i]<c.s||T[i]>=c.e)continue;const d=((T[i+1]??T[i])-(T[i-1]??T[i]))/2||0;
+      tot.a[la[i]]=(tot.a[la[i]]||0)+d;tot.b[lb[i]]=(tot.b[lb[i]]||0)+d;if(la[i]==="S"||lb[i]==="S")va+=d}
+    for(const k of["a","b"])for(const t of(st.rg&&st.rg[k])||[])if(t>=c.s&&t<c.e)regrip++;
+    per.push({dur:c.e-c.s,tot,va,regrip})}
+  const durs=per.map(p=>p.dur/1000);const ct=mean(durs);
+  const rating=st.rating||100,allow=st.allow??15;const basic=ct*rating/100,std=basic*(1+allow/100);
+  const mot={a:{},b:{}};for(const k of["a","b"])for(const c of MORDER)mot[k][c]=mean(per.map(p=>(p.tot[k][c]||0)/1000));
+  const vaS=mean(per.map(p=>p.va/1000));
+  return{n:per.length,ct,min:durs.length?Math.min(...durs):0,max:durs.length?Math.max(...durs):0,sd:sd(durs),cv:ct?sd(durs)/ct:0,basic,std,smv:std/60,perHour:std?3600/std:0,
+    mot,va:vaS,vaPct:ct?vaS/ct:0,regrip:mean(per.map(p=>p.regrip)),durs,hands}}
+function handNames(){return{a:"Right hand",b:"Left hand"}}
+
+// Improvement findings from the statistics
+function findings(s){const out=[];if(!s.n)return out;const ct=s.ct,H=s.hands;const f=(lost,title,detail,sev)=>out.push({lost,title,detail,sev});
+  for(const k of["a","b"]){const m=s.mot[k],hn=H[k].toLowerCase();
+    const idle=(m.I||0),hold=(m.H||0);
+    if((idle+hold)/ct>0.4)f(idle+hold*.5,`${H[k]} mostly idle or holding (${Math.round((idle+hold)/ct*100)}%)`,`The ${hn} works only part of the cycle. Share the work between both hands, or use a clamp, guide or fixture to hold the part.`,"high");
+    if((m.R||0)/ct>0.15)f((m.R||0)*.5,`Long reaches with the ${hn}: ${(m.R||0).toFixed(1)} s per cycle`,"Bring the bundle / bin closer to the needle (normal working area, about 40 cm), at the same height as the machine bed.","mid");
+    if((m.P||0)/ct>0.2)f((m.P||0)*.4,`Aligning / positioning with the ${hn}: ${(m.P||0).toFixed(1)} s per cycle`,"Use notches, edge guides, a folder or attachment so the parts line up without adjusting by hand.","mid");
+    if((m.D||0)/ct>0.12)f((m.D||0)*.5,`Disposal takes ${(m.D||0).toFixed(1)} s per cycle (${hn})`,"Put the finished stack where the part falls naturally after sewing, e.g. a chute or a table extension next to the machine.","low")}
+  const idleBoth=Math.min(s.mot.a.I||0,s.mot.b.I||0);if(idleBoth/ct>0.08)f(idleBoth,`Both hands waiting ${idleBoth.toFixed(1)} s per cycle`,"Check for waiting on bundles, thread breaks or the machine. Feed work before the operator runs out.","high");
+  if(s.regrip>2)f(s.regrip*0.25,`${s.regrip.toFixed(1)} re-grips at the needle per cycle`,"Each re-grip stops the flow. Train one continuous guiding motion, check fabric slippage and the presser-foot pressure.","mid");
+  if(s.cv>0.15)f(ct*s.cv*.5,`Cycle times vary ${Math.round(s.cv*100)}%`,`From ${s.min.toFixed(1)} to ${s.max.toFixed(1)} s. Look at the slow cycles in the replay: interruptions, re-work or a missing method.`,"mid");
+  if(s.vaPct<0.4)f(0,`Sewing is only ${Math.round(s.vaPct*100)}% of the cycle`,"Most of the time is handling. Focus on pick-up, aligning and disposal to raise the value-added share.","info");
+  const unk=((s.mot.a.U||0)+(s.mot.b.U||0))/2;if(unk/ct>0.2)f(0,`Hands not visible ${Math.round(unk/ct*100)}% of the time`,"Move the camera so both hands stay in the picture (higher, more from above). Results are less reliable.","info");
+  return out.sort((x,y)=>y.lost-x.lost)}
+
+// Line balance from the operation bulletin and the studies
+function lineCalc(line,studies){const target=+line.target||0;const takt=target?3600/target:0;
+  const ops=(line.ops||[]).map(o=>{const ss=studies.filter(s=>s.opId===o.id&&s.stats&&s.stats.n);const n=Math.max(1,+o.mp||1);
+    const smvS=(+o.smv||0)*60;const act=ss.length?mean(ss.map(s=>s.stats.std)):0;const ct=(act||smvS)/n;
+    return{op:o,studies:ss,n,smvS,act,ct,measured:!!ss.length,need:takt?(act||smvS)/takt:0,perHour:ct?3600/ct:0,diff:act&&smvS?(act-smvS)/smvS:null}});
+  const valid=ops.filter(x=>x.ct>0);const bn=valid.reduce((a,x)=>!a||x.ct>a.ct?x:a,null);
+  const sumCt=valid.reduce((a,x)=>a+x.ct,0);const mp=valid.reduce((a,x)=>a+x.n,0);
+  const totSmv=ops.reduce((a,x)=>a+(+x.op.smv||0),0),totAct=ops.reduce((a,x)=>a+((x.act||x.smvS)/60),0);
+  const out=bn?3600/bn.ct:0;
+  return{ops,takt,target,bn,out,lbr:bn&&valid.length?sumCt/(valid.length*bn.ct):0,mp,totSmv,totAct,eff:out&&mp?out*totSmv/(60*mp):0,measured:ops.filter(x=>x.measured).length,
+    need:takt?ops.reduce((a,x)=>a+x.need,0):0}}
+
+// Keep the two hands as stable tracks: a = operator's right hand, b = operator's left hand.
+// The tracker labels hand shape as seen in an un-mirrored camera image, so its "Left" is the operator's right hand.
+// Position continuity decides when the label is unsure or both hands get the same label.
+function assignHands(prev,hands){ // hands: [{lm:[flat], side:"a"|"b"|null, score}] ; prev: {a:{x,y}|null,b:{x,y}|null}
+  const wr=h=>({x:h.lm[0],y:h.lm[1]});const out={a:null,b:null};if(!hands.length)return out;
+  const cost=(h,k)=>{const p=prev[k];const d=p?hyp(p,wr(h)):300;const lab=h.side&&h.score>=0.6?(h.side===k?-120:180):0;return d+lab};
+  if(hands.length===1){const h=hands[0];out[cost(h,"a")<=cost(h,"b")?"a":"b"]=h.lm;return out}
+  const[h1,h2]=hands;if(cost(h1,"a")+cost(h2,"b")<=cost(h2,"a")+cost(h1,"b")){out.a=h1.lm;out.b=h2.lm}else{out.a=h2.lm;out.b=h1.lm}
+  return out}
+/*ENGINE-END*/
+/* ===== Storage =====
+   Android app: JSON files in the app's private storage (linestudy/...). Browser: IndexedDB.
+   lines/<id>.json, studies/<id>.json (summary), sdata/<id>.json (hand frames + motion labels, loaded only when needed) */
+const FS=NATIVE?NP.Filesystem:null;
+const KV={db:null,root:"linestudy",
+  open(){if(FS)return Promise.resolve();return new Promise(res=>{try{const r=indexedDB.open("line-study",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>{this.db=r.result;res()};r.onerror=()=>res()}catch(e){res()}})},
+  tx(mode,fn){return new Promise((res,rej)=>{const t=this.db.transaction("kv",mode);const q=fn(t.objectStore("kv"));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error)})},
+  async get(path){if(FS){try{const d=await FS.readFile({path:this.root+"/"+path,directory:"DATA",encoding:"utf8"});return JSON.parse(d.data)}catch(e){return null}}
+    if(!this.db)return null;return this.tx("readonly",o=>o.get(path)).then(v=>v||null)},
+  async put(path,v){if(FS)return FS.writeFile({path:this.root+"/"+path,data:JSON.stringify(v),directory:"DATA",encoding:"utf8",recursive:true});return this.tx("readwrite",o=>o.put(v,path))},
+  async del(path){if(FS){try{await FS.deleteFile({path:this.root+"/"+path,directory:"DATA"})}catch(e){}return}return this.tx("readwrite",o=>o.delete(path))},
+  async all(dir){if(FS){let files=[];try{const r=await FS.readdir({path:this.root+"/"+dir,directory:"DATA"});files=r.files.map(f=>typeof f==="string"?f:f.name)}catch(e){}
+      const out=[];for(const f of files){if(!f.endsWith(".json"))continue;const j=await this.get(dir+"/"+f);if(j)out.push(j)}return out}
+    if(!this.db)return[];const keys=await this.tx("readonly",o=>o.getAllKeys());const out=[];for(const k of keys)if(String(k).startsWith(dir+"/")){const v=await this.get(k);if(v)out.push(v)}return out}};
+const DB={
+  async load(){S.lines=(await KV.all("lines")).sort((a,b)=>(b.updated||0)-(a.updated||0));S.studies=(await KV.all("studies")).sort((a,b)=>b.created-a.created)},
+  async putLine(l){l.updated=Date.now();await KV.put("lines/"+l.id+".json",l);const i=S.lines.findIndex(x=>x.id===l.id);if(i>=0)S.lines[i]=l;else S.lines.unshift(l)},
+  async delLine(id){await KV.del("lines/"+id+".json");S.lines=S.lines.filter(x=>x.id!==id)},
+  async putStudy(m,data){m.updated=Date.now();if(data)await KV.put("sdata/"+m.id+".json",data);await KV.put("studies/"+m.id+".json",m);const i=S.studies.findIndex(x=>x.id===m.id);if(i>=0)S.studies[i]=m;else S.studies.unshift(m);S.studies.sort((a,b)=>b.created-a.created)},
+  data(id){return KV.get("sdata/"+id+".json")},
+  async delStudy(m){await KV.del("studies/"+m.id+".json");await KV.del("sdata/"+m.id+".json");if(m.video)await deleteVideoFile(m.video);S.studies=S.studies.filter(x=>x.id!==m.id)}};
+const lineOf=id=>S.lines.find(l=>l.id===id);
+const opOf=(l,id)=>l&&(l.ops||[]).find(o=>o.id===id);
+const studiesOf=lineId=>S.studies.filter(s=>s.lineId===lineId);
+const pref=(k,d)=>{try{const v=localStorage.getItem("ls."+k);return v==null?d:v}catch(e){return d}};
+const setPref=(k,v)=>{try{localStorage.setItem("ls."+k,v)}catch(e){}};
+
+/* ===== App state + navigation ===== */
+const S={view:"home",lines:[],studies:[],line:null,study:null,ltab:"balance"};
+const ACT={};
+let player=null;
+function stopPlayer(){if(player){player.stop();player=null}}
+function leaveView(){stopPlayer();if(S.view==="record")stopCamera();if(S.view==="analyze")AN.cancel=true;if(S.view==="zones")stopZoneView()}
+function go(view){if(!S.user&&view!=="login"&&view!=="request")view="login";leaveView();closeModal();S.view=view;render();window.scrollTo(0,0)}
+const VIEWS={},MOUNTS={};
+function render(){if(!S.user&&S.view!=="request")S.view="login";const v=VIEWS[S.view]||VIEWS.home;app.innerHTML=v();const m=MOUNTS[S.view];if(m)m()}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;const f=ACT[b.dataset.act];if(f){e.preventDefault();f(b.dataset,b)}});
+document.addEventListener("change",e=>{const t=e.target;const f=t.dataset&&ACT[t.dataset.change];if(f)f(t.dataset,t)});
+document.addEventListener("input",e=>{const t=e.target;const f=t.dataset&&ACT[t.dataset.input];if(f)f(t.dataset,t)});
+document.addEventListener("pointerdown",e=>{if(e.target.closest&&e.target.closest("[data-keep]"))e.preventDefault()});
+ACT.home=()=>{if(S.user)go("home")};
+ACT.go=d=>go(d.v);
+function closeModal(){const m=$("#modal");if(!m)return;m.hidden=true;m.classList.remove("full");m.innerHTML=""}
+ACT.closeModal=()=>closeModal();
+function modal(html,wide){const m=$("#modal");m.innerHTML=`<div class="box${wide?" wide":""}" role="dialog">${html}</div>`;m.hidden=false}
+const fmtSec=s=>(s||0).toFixed(1)+" s";
+const pct=x=>Math.round((x||0)*100)+"%";
+const deviceName=()=>pref("device","")||"This phone";
+
+/* ===== Hand tracking (21 points per hand, both hands) ===== */
+const HAND_EDGES=[[0,1],[1,2],[2,3],[3,4],[0,5],[5,6],[6,7],[7,8],[5,9],[9,10],[10,11],[11,12],[9,13],[13,14],[14,15],[15,16],[13,17],[17,18],[18,19],[19,20],[0,17]];
+const HCOL={a:"#ff9f43",b:"#38c6f4"};
+const Hands={lm:null,loading:null,lastTs:0,
+  load(){if(this.lm)return Promise.resolve(this.lm);if(window.__HANDSTUB){this.lm=window.__HANDSTUB;return Promise.resolve(this.lm)}
+    if(!this.loading){this.loading=(async()=>{const files=await FilesetResolver.forVisionTasks(CDN+"/wasm");
+      const o=d=>({baseOptions:{modelAssetPath:HMODEL,delegate:d},runningMode:"VIDEO",numHands:2,minHandDetectionConfidence:.4,minHandPresenceConfidence:.4,minTrackingConfidence:.4});
+      try{this.lm=await HandLandmarker.createFromOptions(files,o("GPU"))}catch(e){this.lm=await HandLandmarker.createFromOptions(files,o("CPU"))}return this.lm})();
+      this.loading.catch(()=>{this.loading=null})}return this.loading},
+  detect(v){const ts=Math.max(Math.round(performance.now()),this.lastTs+1);this.lastTs=ts;let r;try{r=this.lm.detectForVideo(v,ts)}catch(e){return[]}
+    return(r&&r.landmarks||[]).map((l,i)=>{const h=r.handedness&&r.handedness[i]&&r.handedness[i][0];const lm=[];for(const q of l){lm.push(Math.round(q.x*1000),Math.round(q.y*1000))}
+      return{lm,side:h?(h.categoryName==="Left"?"a":"b"):null,score:h?h.score:0}})}};
+function drawHand(ctx,lm,W,H,col,lw){if(!lm)return;const P=i=>[lm[i*2]/1000*W,lm[i*2+1]/1000*H];ctx.save();ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.lineCap="round";
+  for(const[a,b]of HAND_EDGES){const p=P(a),q=P(b);ctx.beginPath();ctx.moveTo(p[0],p[1]);ctx.lineTo(q[0],q[1]);ctx.stroke()}
+  ctx.fillStyle=col;for(const i of[4,8,12,16,20]){const p=P(i);ctx.beginPath();ctx.arc(p[0],p[1],lw*1.3,0,7);ctx.fill()}ctx.restore()}
+function drawZones(ctx,W,H,zones,alpha=0.18){for(const z of zones||[]){const c=ZT[z.type].c;ctx.save();ctx.fillStyle=c;ctx.globalAlpha=alpha;ctx.fillRect(z.x*W,z.y*H,z.w*W,z.h*H);ctx.globalAlpha=1;ctx.strokeStyle=c;ctx.lineWidth=Math.max(2,W/300);ctx.setLineDash([W/80,W/120]);ctx.strokeRect(z.x*W,z.y*H,z.w*W,z.h*H);ctx.setLineDash([]);
+  ctx.font=`600 ${Math.max(12,W/45)}px IBM Plex Sans, sans-serif`;const tw=ctx.measureText(ZT[z.type].l).width;ctx.fillStyle=c;ctx.fillRect(z.x*W,z.y*H,tw+12,Math.max(18,W/32));ctx.fillStyle="#fff";ctx.fillText(ZT[z.type].l,z.x*W+6,z.y*H+Math.max(13,W/44));ctx.restore()}}
+function nearestFrame(frames,t){let lo=0,hi=frames.length-1;if(hi<0)return-1;while(hi-lo>1){const mid=(lo+hi)>>1;if(frames[mid].t<t)lo=mid;else hi=mid}return Math.abs(frames[lo].t-t)<=Math.abs(frames[hi].t-t)?lo:hi}
+/* ===== Helpers ===== */
+const $=s=>document.querySelector(s);
+const app=$("#app");
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const fmtS=s=>s<60?s.toFixed(1)+" s":Math.floor(s/60)+" min "+String(Math.round(s%60)).padStart(2,"0")+" s";
+const fmtClock=ms=>{const s=Math.max(0,ms)/1000;return String(Math.floor(s/60)).padStart(2,"0")+":"+(s%60).toFixed(1).padStart(4,"0")};
+const fmtDate=ts=>new Date(ts).toLocaleString([], {dateStyle:"medium",timeStyle:"short"});
+let toastT;function toast(m){const t=$("#toast");t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3200)}
+async function download(name,text,type){
+  if(NATIVE&&NP.Filesystem&&NP.Share){try{const r=await NP.Filesystem.writeFile({path:name,data:text,directory:"CACHE",encoding:"utf8"});await NP.Share.share({title:name,files:[r.uri]})}catch(e){if(!/cancel/i.test(String(e&&(e.message||e))))toast("Couldn't share the file.")}return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
+function abToB64(buf){let s="";const b=new Uint8Array(buf);for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)}
+async function shareBinary(name,b64,mime){
+  if(NATIVE&&NP.Filesystem&&NP.Share){try{const r=await NP.Filesystem.writeFile({path:name,data:b64,directory:"CACHE"});await NP.Share.share({title:name,files:[r.uri]})}catch(e){if(!/cancel/i.test(String(e&&(e.message||e))))toast("Couldn't share the file.")}return}
+  const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([u],{type:mime}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
+const LIBS={jspdf:"jspdf/4.2.1/jspdf.umd.min.js",html2canvas:"html2canvas/1.4.1/html2canvas.min.js",exceljs:"exceljs/4.4.0/exceljs.min.js"};
+const libLoaded={};
+function loadLib(k){if(libLoaded[k])return libLoaded[k];const file=LIBS[k].split("/").pop();
+  const src=NATIVE?"lib/"+file:"https://cdnjs.cloudflare.com/ajax/libs/"+LIBS[k];
+  return libLoaded[k]=new Promise((res,rej)=>{const sc=document.createElement("script");sc.src=src;sc.onload=res;sc.onerror=()=>{libLoaded[k]=null;rej(new Error("Couldn't load "+k))};document.head.appendChild(sc)})}
+const safeName=s=>String(s||"study").replace(/[^\w\-]+/g,"-").replace(/-+/g,"-").slice(0,50);
+function nearest(frames,t){let lo=0,hi=frames.length-1;while(hi-lo>1){const mid=(lo+hi)>>1;if(frames[mid].t<t)lo=mid;else hi=mid}return Math.abs(frames[lo].t-t)<=Math.abs(frames[hi].t-t)?frames[lo]:frames[hi]}
+//const STATUS={ok:{l:"OK",c:"var(--ok)"},slow:{l:"Slow",c:"var(--slow)"},method:{l:"Different method",c:"var(--method)"},missed:{l:"Missed",c:"var(--miss)"},fast:{l:"Faster",c:"var(--fast)"}};
+//const ELCOL=["#4db2ab","#6aa2df","#e3a332","#9f8ae4","#3dbd83","#e17461","#c7b54a","#5fc3e4"];
+let audioCtx=null;function beep(f=880,d=.15){try{audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=f;g.gain.value=.15;o.connect(g);g.connect(audioCtx.destination);o.start();o.stop(audioCtx.currentTime+d)}catch(e){}}
+let wake=null;async function keepAwake(){if(NATIVE&&NP.KeepAwake){try{await NP.KeepAwake.keepAwake()}catch(e){}return}try{if("wakeLock" in navigator&&!wake){wake=await navigator.wakeLock.request("screen");wake.addEventListener("release",()=>wake=null)}}catch(e){}}
+
+
+/* ===== Icons ===== */
+const ICONS={grid:'<path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/>',play:'<path d="M7 4.8v14.4L19 12z"/>',doc:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/>',
+  image:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 8"/>',camera:'<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  pen:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13 7 4 4"/>',share:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>',
+  check:'<path d="m5 12 4 4 10-10"/>',next:'<path d="M9 5l7 7-7 7"/>',pdf:'<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 17h4"/>',
+  trash:'<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/>',users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.3-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.6c2 .7 3.2 2.6 3.6 5.4"/>',
+  key:'<circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3"/>',out:'<path d="M14 4h5v16h-5M10 8l-4 4 4 4M6 12h10"/>',power:'<path d="M12 3v9M6.5 6.5a8 8 0 1 0 11 0"/>',
+  list:'<path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/>',rec:'<circle cx="12" cy="12" r="6"/>',xls:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/>'};
+const ic=(n,cls="")=>`<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||""}</svg>`;
+
+
+Object.assign(ICONS,{home:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',cloud:'<path d="M7 18h10a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.1 9.2 4.5 4.5 0 0 0 7 18z"/><path d="M12 15V10M9.5 12.5 12 10l2.5 2.5"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/>'});
+
+/* ===== Video helpers ===== */
+// Recorded WebM files have no duration until the end is read once; this forces it so seeking works.
+function fixDuration(v){if(isFinite(v.duration)&&v.duration>0)return Promise.resolve();return new Promise(res=>{let done=false;const fin=()=>{if(done)return;done=true;v.removeEventListener("timeupdate",h);try{v.currentTime=0}catch(e){}res()};const h=()=>{if(isFinite(v.duration))fin()};v.addEventListener("timeupdate",h);try{v.currentTime=1e101}catch(e){fin()}setTimeout(fin,2500)})}
+const VCACHE={};
+async function videoSrc(meta){if(!meta||!meta.file)return null;if(VCACHE[meta.file])return VCACHE[meta.file];if(!(NATIVE&&FS&&FS.getUri))return null;
+  const type=meta.mime&&meta.mime.split(";")[0]||(meta.ext==="mp4"?"video/mp4":"video/webm");let url=null;
+  try{const r=await FS.getUri({path:meta.file,directory:"DATA"});const direct=window.Capacitor.convertFileSrc(r.uri);
+    try{const res=await fetch(direct);if(!res.ok)throw new Error("HTTP "+res.status);const b=await res.blob();if(!b.size)throw new Error("empty");url=URL.createObjectURL(b.type?b:new Blob([b],{type}))}
+    catch(e){// fallback: read the file through the file plugin
+      const d=await FS.readFile({path:meta.file,directory:"DATA"});const bin=atob(d.data),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);url=URL.createObjectURL(new Blob([u],{type}))}}
+  catch(e){return null}
+  VCACHE[meta.file]=url;return url}
+async function writeBlob(blob,path,directory,onP){const CH=3*1024*1024;if(!blob||!blob.size)throw new Error("The video is empty");
+  for(let off=0;off<blob.size;off+=CH){const b64=abToB64(await blob.slice(off,off+CH).arrayBuffer());
+    if(off===0)await FS.writeFile({path,data:b64,directory,recursive:true});else await FS.appendFile({path,data:b64,directory});
+    if(onP)onP(Math.min(1,(off+CH)/blob.size))}}
+async function storeVideo(id,name,blob,mime,start){const ext=/mp4/.test(mime||"")?"mp4":"webm";const b=$("#busy");
+  if(!NATIVE||!FS){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=safeName(name)+"."+ext;document.body.appendChild(a);a.click();a.remove();toast("Video downloaded.");return null}
+  const prog=(l,p)=>{b.textContent=l+" "+Math.round(p*100)+"%"};b.hidden=false;
+  try{const file="linestudy/videos/"+id+"."+ext;await writeBlob(blob,file,"DATA",p=>prog("Saving video…",p));
+    let gallery=null;try{const g="Movies/LineStudy/"+safeName(name)+"_"+new Date().toISOString().slice(0,10)+"_"+id.slice(-4)+"."+ext;await writeBlob(blob,g,"EXTERNAL_STORAGE",p=>prog("Copying to Gallery…",p));gallery=g}
+    catch(e){toast("Saved in the app, but couldn't copy it to the Gallery ("+(e.message||e)+"). Use Copy to Gallery on the study page.")}
+    return{file,gallery,mime:mime||("video/"+ext),ext,start,size:blob.size,created:Date.now()}}
+  finally{b.hidden=true;b.textContent="Analyzing…"}}
+async function deleteVideoFile(meta){if(!meta||!FS)return;try{await FS.deleteFile({path:meta.file,directory:"DATA"})}catch(e){}}
+
+/* Video player in recording time (ms). videoTime = (t - offsetMs) / 1000 */
+class VPlayer{
+  constructor(root,dur,src,offsetMs,onTime,overlay){this.root=root;this.dur=Math.max(1,dur);this.off=offsetMs||0;this.onTime=onTime;this.overlay=overlay;this.t=0;this.playing=false;this.stopAt=null;this.onStop=null;this.stops=null;
+    this.v=root.querySelector("video");this.cv=root.querySelector("canvas");this.rng=root.querySelector("input[type=range]");this.btn=root.querySelector("[data-pl=play]");this.tm=root.querySelector(".time");this.sp=root.querySelector("[data-pl=speed]");
+    this.v.muted=true;this.v.playsInline=true;this.v.preload="auto";
+    this.v.addEventListener("error",()=>{const er=this.v.error;const codes={1:"loading was stopped",2:"network/file read error",3:"the video data could not be decoded",4:"this video format is not supported on this phone"};
+      const msg="Video can't play: "+(er?codes[er.code]||("error "+er.code):"unknown error")+(er&&er.message?" ("+er.message+")":"");this.showMsg(msg);toast(msg)});
+    if(src)this.v.src=src;else this.showMsg("The video file could not be opened.");
+    this.ready=new Promise(res=>{this.v.addEventListener("loadedmetadata",()=>{fixDuration(this.v).then(()=>{this.isReady=true;this.seek(this.t);res()})},{once:true});this.v.addEventListener("error",()=>res(),{once:true})});
+    this.rng.max=this.dur;this.rng.addEventListener("input",()=>{this.pause();this.seek(+this.rng.value)});this.btn.addEventListener("click",()=>this.toggle());
+    if(this.sp)this.sp.addEventListener("change",()=>{this.v.playbackRate=+this.sp.value})}
+  showMsg(m){const st=this.root.querySelector(".vstage");if(!st)return;let d=st.querySelector(".vmsg");if(!d){d=document.createElement("div");d.className="vmsg";st.appendChild(d)}d.textContent=m}
+  vt(t){return Math.max(0,(t-this.off)/1000)}
+  seek(t){this.t=clamp(t,0,this.dur);try{if(this.isReady)this.v.currentTime=this.vt(this.t)}catch(e){}this.ui()}
+  ui(){this.rng.value=this.t;this.tm.textContent=fmtClock(this.t)+" / "+fmtClock(this.dur);
+    if(this.cv){const c=this.cv,x=c.getContext("2d");if(this.v.videoWidth&&(c.width!==this.v.videoWidth)){c.width=this.v.videoWidth;c.height=this.v.videoHeight}x.clearRect(0,0,c.width,c.height);if(this.overlay)this.overlay(c,this.t)}
+    if(this.onTime)this.onTime(this.t)}
+  toggle(){this.playing?this.pause():this.play()}
+  play(){if(!this.isReady){this.playing=true;this.btn.textContent="Pause";this.ready.then(()=>{if(this.playing&&this.isReady){this.playing=false;this.play()}});return}
+    if(this.t>=this.dur-40)this.seek(0);this.playing=true;this.btn.textContent="Pause";const p=this.v.play();if(p&&p.catch)p.catch(e=>{if(e&&e.name!=="AbortError"){this.pause();this.showMsg("Video can't play: "+(e.message||e.name))}});let prev=this.t;
+    const step=()=>{if(!this.playing)return;if(this.v.seeking){this.raf=requestAnimationFrame(step);return}this.t=Math.min(this.dur,this.v.currentTime*1000+this.off);if(this.t<prev-5)prev=this.t;
+      if(this.stopAt!=null&&this.t>=this.stopAt){const s=this.stopAt,f=this.onStop;this.stopAt=null;this.onStop=null;this.pause();this.seek(s);if(f)f();return}
+      if(this.stops){const b=this.stops.find(x=>x>prev+5&&x<=this.t);if(b!=null){this.pause();this.seek(b);if(this.onAutoStop)this.onAutoStop(b);return}}
+      if(this.t>=this.dur||this.v.ended){this.pause();this.t=this.dur}prev=this.t;this.ui();if(this.playing)this.raf=requestAnimationFrame(step)};
+    this.raf=requestAnimationFrame(step)}
+  playTo(t,cb){this.stopAt=t;this.onStop=cb;this.play()}
+  pause(){this.playing=false;cancelAnimationFrame(this.raf);try{this.v.pause()}catch(e){}this.btn.textContent="Play"}
+  stop(){this.pause();this.stopAt=null;this.onStop=null;try{this.v.removeAttribute("src");this.v.load()}catch(e){}}
+}
+const vplayerHtml=(id,cap)=>`<div class="player" id="${id}"><div class="vstage"><video playsinline muted></video><canvas></canvas>${cap?`<div class="vcap" id="${cap}"></div>`:""}</div><div class="pctl"><button class="btn sm" data-pl="play" style="min-width:76px">Play</button><input type="range" min="0" step="10" value="0" aria-label="Video position"><span class="time">00:00.0</span><select data-pl="speed" style="width:auto;min-height:38px"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></div></div>`;
+
+/* ===== Users and login ===== */
+// Accounts are kept on this phone (file linestudy/users.json in the app, localStorage in a browser).
+// Passwords are stored only as salted PBKDF2 hashes.
+const ROLES={admin:{l:"Admin",d:"Everything, including users and deleting"},engineer:{l:"Engineer",d:"Set up lines, run studies, reports, backups"},checker:{l:"Checker",d:"Run time studies and view reports"}};
+const Users={list:[],
+  async load(){try{if(FS){const r=await FS.readFile({path:"linestudy/users.json",directory:"DATA",encoding:"utf8"});this.list=JSON.parse(r.data).users||[]}else this.list=JSON.parse(localStorage.getItem("ls.users")||"{}").users||[]}catch(e){this.list=[]}},
+  async save(){const data=JSON.stringify({users:this.list});if(FS)await FS.writeFile({path:"linestudy/users.json",data,directory:"DATA",encoding:"utf8",recursive:true});else localStorage.setItem("ls.users",data)},
+  find(uid){uid=String(uid||"").trim().toLowerCase();return this.list.find(u=>u.uid===uid)}
+};
+const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+async function hashPw(pw,saltHex){const salt=saltHex?new Uint8Array(saltHex.match(/../g).map(h=>parseInt(h,16))):crypto.getRandomValues(new Uint8Array(16));
+  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveBits"]);
+  const bits=await crypto.subtle.deriveBits({name:"PBKDF2",salt,iterations:120000,hash:"SHA-256"},key,256);return{salt:hex(salt),hash:hex(bits)}}
+async function checkPw(u,pw){const h=await hashPw(pw,u.salt);return h.hash===u.hash}
+const can=what=>{const r=S.user&&S.user.role;if(r==="admin")return true;if(r==="engineer")return what!=="users"&&what!=="delete";if(r==="checker")return what==="check";return false};
+const LG={err:"",busy:false};
+// New-user approval: the new phone makes a request code, the admin turns it into an approval code (works offline, no server).
+const APK="NZF-LineStudy-approval-v1-9Rw4p6Tz";const B32="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const b32=bytes=>{let bits=0,val=0,o="";for(const x of bytes){val=(val<<8)|x;bits+=8;while(bits>=5){o+=B32[(val>>>(bits-5))&31];bits-=5}}return o};
+const normCode=c=>String(c||"").toUpperCase().replace(/O/g,"0").replace(/[^A-Z2-9]/g,"").replace(/[IO01]/g,"");
+const fmtCode=c=>c.slice(0,4)+"-"+c.slice(4,8);
+async function approvalFor(req,role){const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(APK),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
+  const sig=await crypto.subtle.sign("HMAC",k,new TextEncoder().encode(normCode(req)+"|"+role));return b32(new Uint8Array(sig).slice(0,5))}
+const Pend={get(){try{return JSON.parse(localStorage.getItem("ls.pending")||"null")}catch(e){return null}},set(p){try{p?localStorage.setItem("ls.pending",JSON.stringify(p)):localStorage.removeItem("ls.pending")}catch(e){}}};
+const RQ={err:""};
+function rqErr(m){RQ.err=m;const e=$("#rqErr");if(e)e.textContent=m}
+const pwStyle='style="width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2)"';
+function reqMsg(p){return"Line Study – access request\nName: "+p.name+"\nUser ID: "+p.uid+"\nRequest code: "+fmtCode(p.code)}
+function vRequest(){const p=Pend.get();
+  if(p)return`<section class="panel login"><div><div class="eyebrow">Waiting for approval</div><h1>Send your request</h1>
+  <p class="lead">Send this request code to the admin. The admin will send you back an approval code.</p></div>
+  <div class="code" aria-label="Request code">${fmtCode(p.code)}</div>
+  <p class="note">${esc(p.name)} · user ID <b>${esc(p.uid)}</b></p>
+  <button class="btn" data-act="rqShare">${ic("share")}Send to admin (WhatsApp, SMS…)</button>
+  <div class="field"><label class="lbl" for="rqApp">Approval code from the admin</label><input type="text" id="rqApp" class="codein" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX" maxlength="12"></div>
+  <p class="note" id="rqErr" style="color:var(--miss)">${esc(RQ.err)}</p>
+  <button class="btn primary big" data-act="rqEnter">${ic("check")}Enter the app</button>
+  <button class="link" data-act="rqCancel">Cancel this request</button></section>`;
+  return`<section class="panel login"><div>${Users.list.length?`<button class="link" data-act="rqBack">← Sign in</button>`:""}<div class="eyebrow">New user</div><h1>Request access</h1>
+  <p class="lead">Fill in your details. The app makes a request code; send it to the admin and enter the approval code you get back.</p></div>
+  <div class="field"><label class="lbl" for="rqName">Full name</label><input type="text" id="rqName" autocomplete="name"></div>
+  <div class="field"><label class="lbl" for="rqId">User ID you want</label><input type="text" id="rqId" autocapitalize="none" spellcheck="false" placeholder="e.g. karim.qa"></div>
+  <div class="field"><label class="lbl" for="rqPw">Password</label><input type="password" id="rqPw" autocomplete="new-password" ${pwStyle}></div>
+  <div class="field"><label class="lbl" for="rqPw2">Repeat password</label><input type="password" id="rqPw2" autocomplete="new-password" ${pwStyle}></div>
+  <p class="note" id="rqErr" style="color:var(--miss)">${esc(RQ.err)}</p>
+  <button class="btn primary big" data-act="rqMake">Make request code</button>
+  ${NATIVE&&!Users.list.length?`<button class="btn" data-act="exitAsk">Exit app</button>`:""}</section>`}
+ACT.rqStart=()=>{RQ.err="";go("request")};
+ACT.rqBack=()=>{RQ.err="";go("login")};
+ACT.rqMake=async()=>{const name=$("#rqName").value.trim(),uid=$("#rqId").value.trim().toLowerCase(),pw=$("#rqPw").value,pw2=$("#rqPw2").value;
+  if(!name||!uid)return rqErr("Enter your name and a user ID.");if(!/^[a-z0-9._-]{3,30}$/.test(uid))return rqErr("User ID: 3–30 letters, numbers, dot, dash or underscore. No spaces.");
+  if(Users.find(uid))return rqErr("That user ID is already used on this phone. Choose another.");
+  if(pw.length<6)return rqErr("Password must be at least 6 characters.");if(pw!==pw2)return rqErr("The two passwords are different.");
+  const h=await hashPw(pw);const code=b32(crypto.getRandomValues(new Uint8Array(5)));
+  Pend.set({name,uid,salt:h.salt,hash:h.hash,code,created:Date.now()});RQ.err="";render()};
+ACT.rqShare=async()=>{const p=Pend.get();if(!p)return;const text=reqMsg(p);
+  if(NATIVE&&NP.Share){try{await NP.Share.share({title:"Line Study access request",text,dialogTitle:"Send to admin"})}catch(e){}return}
+  try{await navigator.clipboard.writeText(text);toast("Request copied. Paste it to the admin.")}catch(e){toast("Send the admin this code: "+fmtCode(p.code))}};
+ACT.rqCancel=()=>{if(!confirm("Cancel this request? You will need a new request code."))return;Pend.set(null);RQ.err="";render()};
+ACT.rqEnter=async()=>{const p=Pend.get();if(!p)return;const a=normCode($("#rqApp").value);if(a.length!==8)return rqErr("The approval code has 8 letters and numbers.");
+  let role=null;for(const r of Object.keys(ROLES))if(await approvalFor(p.code,r)===a){role=r;break}
+  if(!role)return rqErr("That approval code doesn't match this request. Check it with the admin.");
+  if(Users.find(p.uid))return rqErr("That user ID is already used on this phone.");
+  const u={id:p.uid,uid:p.uid,name:p.name,role,active:true,salt:p.salt,hash:p.hash,created:Date.now(),approved:fmtCode(p.code)};Users.list.push(u);
+  try{await Users.save()}catch(e){Users.list=Users.list.filter(x=>x!==u);return rqErr("Couldn't save the account: "+(e.message||e))}
+  Pend.set(null);RQ.err="";signIn(u,false);toast("Approved as "+ROLES[role].l+". Welcome, "+p.name+".")};
+// admin side
+const AP={req:"",role:"engineer",out:"",who:""};
+function approvalsLog(){try{return JSON.parse(localStorage.getItem("ls.approvals")||"[]")}catch(e){return[]}}
+function approvePanel(){const log=approvalsLog();
+  return`<section class="panel"><h2>Approve a new user</h2><p class="note">A new user taps <b>Request access</b> on their phone and sends you a request code. Paste their message or type the code, choose the role, and send back the approval code.</p>
+  <div class="field"><label class="lbl" for="apReq">Request code or message</label><textarea id="apReq" rows="3" data-input="apF" data-f="req" placeholder="ABCD-EFGH" style="width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2)">${esc(AP.req)}</textarea></div>
+  <div class="field"><label class="lbl" for="apRole">Role</label><select id="apRole" data-change="apRole">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}"${AP.role===k?" selected":""}>${v.l}: ${v.d}</option>`).join("")}</select></div>
+  <button class="btn primary" data-act="apMake">${ic("key")}Make approval code</button>
+  ${AP.out?`<div class="code" aria-label="Approval code">${fmtCode(AP.out)}</div><p class="note">Approval code for <b>${esc(AP.who)}</b> as <b>${ROLES[AP.role].l}</b>. It only works with that request.</p><button class="btn" data-act="apShare">${ic("share")}Send approval code</button>`:""}
+  ${log.length?`<details class="more"><summary>Approved so far (${log.length})</summary><div class="tbl-wrap"><table><tbody>${log.slice(0,30).map(x=>`<tr><td>${esc(x.who)}</td><td>${ROLES[x.role]?ROLES[x.role].l:esc(x.role)}</td><td class="num">${fmtDate(x.t)}</td></tr>`).join("")}</tbody></table></div></details>`:""}</section>`}
+ACT.apF=(d,el)=>{AP[d.f]=el.value};ACT.apRole=(d,el)=>{AP.role=el.value;AP.out=""};
+ACT.apMake=async()=>{const txt=AP.req||"";const m=txt.match(/request code\W*([A-Za-z0-9]{4}\W?[A-Za-z0-9]{4})/i);const code=normCode(m?m[1]:txt);
+  if(code.length!==8){toast("A request code has 8 letters and numbers, like ABCD-EFGH.");return}
+  const nm=(txt.match(/Name:\s*(.+)/i)||[])[1],id=(txt.match(/User ID:\s*(\S+)/i)||[])[1];
+  AP.who=nm?nm.trim()+(id?" ("+id.trim()+")":""):"request "+fmtCode(code);AP.out=await approvalFor(code,AP.role);
+  const log=approvalsLog();log.unshift({who:AP.who,role:AP.role,req:fmtCode(code),t:Date.now(),by:S.user.name});try{localStorage.setItem("ls.approvals",JSON.stringify(log.slice(0,100)))}catch(e){}
+  const y=window.scrollY;render();window.scrollTo(0,y)};
+ACT.apShare=async()=>{const text="Line Study approval for "+AP.who+" ("+ROLES[AP.role].l+")\nApproval code: "+fmtCode(AP.out);
+  if(NATIVE&&NP.Share){try{await NP.Share.share({title:"Line Study approval",text,dialogTitle:"Send approval code"})}catch(e){}return}
+  try{await navigator.clipboard.writeText(text);toast("Approval copied")}catch(e){toast("Approval code: "+fmtCode(AP.out))}};
+function vLogin(){if(!Users.list.length||Pend.get())return vRequest();const first=false;
+  return`<section class="panel login"><div><div class="eyebrow">${first?"First start":"Sign in"}</div><h1>${first?"Create the admin account":"Line Study"}</h1>
+  <p class="lead">${first?"This account manages users on this phone. Choose a password you will remember; it cannot be recovered.":"Enter your user ID and password."}</p></div>
+  ${first?`<div class="field"><label class="lbl" for="lgName">Full name</label><input type="text" id="lgName" autocomplete="name"></div>`:""}
+  <div class="field"><label class="lbl" for="lgId">User ID</label><input type="text" id="lgId" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="${first?"e.g. riyadh":""}"></div>
+  <div class="field"><label class="lbl" for="lgPw">Password</label><input type="password" id="lgPw" autocomplete="${first?"new-password":"current-password"}" style="width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2)"></div>
+  ${first?`<div class="field"><label class="lbl" for="lgPw2">Repeat password</label><input type="password" id="lgPw2" autocomplete="new-password" style="width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2)"></div>`
+   :`<label class="check"><input type="checkbox" id="lgStay"> Stay signed in on this phone</label>`}
+  <p class="note" id="lgErr" style="color:var(--miss)">${esc(LG.err)}</p>
+  <button class="btn primary big" data-act="${first?"createAdmin":"login"}">${first?"Create account":"Sign in"}</button>
+  <div class="row between"><span class="note">New user?</span><button class="btn sm" data-act="rqStart">Request access</button></div>
+  ${NATIVE?`<button class="btn" data-act="exitAsk">Exit app</button>`:""}</section>`}
+function lgErr(m){LG.err=m;const e=$("#lgErr");if(e)e.textContent=m}
+ACT.createAdmin=async()=>{const name=$("#lgName").value.trim(),uid=$("#lgId").value.trim().toLowerCase(),pw=$("#lgPw").value,pw2=$("#lgPw2").value;
+  if(!name||!uid)return lgErr("Enter your name and a user ID.");if(!/^[a-z0-9._-]{3,30}$/.test(uid))return lgErr("User ID: 3–30 letters, numbers, dot, dash or underscore. No spaces.");
+  if(pw.length<6)return lgErr("Password must be at least 6 characters.");if(pw!==pw2)return lgErr("The two passwords are different.");
+  const h=await hashPw(pw);const u={id:uid,uid,name,role:"admin",active:true,salt:h.salt,hash:h.hash,created:Date.now()};Users.list.push(u);
+  try{await Users.save()}catch(e){Users.list=[];return lgErr("Couldn't save the account: "+(e.message||e))}
+  signIn(u,false);toast("Admin account created. Welcome, "+name+".")};
+ACT.login=async()=>{const uid=$("#lgId").value,pw=$("#lgPw").value,stay=$("#lgStay").checked;const u=Users.find(uid);
+  if(!u||!(await checkPw(u,pw)))return lgErr("User ID or password is wrong.");if(u.active===false)return lgErr("This account is switched off. Ask the admin.");
+  signIn(u,stay)};
+function signIn(u,stay){S.user={id:u.id,name:u.name,role:u.role};LG.err="";try{stay?localStorage.setItem("ls.session",u.id):localStorage.removeItem("ls.session")}catch(e){}renderUserbar();go("home")}
+ACT.logout=async()=>{closeMenu();leaveView();S.user=null;try{localStorage.removeItem("ls.session")}catch(e){}renderUserbar();S.view="login";render()};
+function renderUserbar(){const b=$("#userbar");if(!b)return;b.innerHTML=S.user?`<button class="uchip" data-act="openMenu" aria-haspopup="menu"><span>${esc(S.user.name)}</span> <i>${ROLES[S.user.role].l}</i> ☰</button>`:""}
+ACT.openMenu=()=>{const m=$("#menu");m.innerHTML=`<div class="box" role="menu"><div class="who">Signed in as <b>${esc(S.user.name)}</b> (${ROLES[S.user.role].l})</div>
+  <button role="menuitem" data-act="menuGo" data-v="home">${ic("home")}Home</button>
+  <button role="menuitem" data-act="menuGo" data-v="lines">${ic("list")}Lines &amp; balance</button>
+  <button role="menuitem" data-act="menuGo" data-v="studies">${ic("clock")}All studies</button>
+  ${can("users")?`<button role="menuitem" data-act="menuGo" data-v="users">${ic("users")}Users &amp; approvals</button>`:""}
+  <button role="menuitem" data-act="menuGo" data-v="settings">${ic("gear")}Settings &amp; backup</button>
+  <button role="menuitem" data-act="menuGo" data-v="password">${ic("key")}Change password</button>
+  <button role="menuitem" data-act="logout">${ic("out")}Log out</button>
+  ${NATIVE?`<button role="menuitem" data-act="exitAsk" style="color:var(--miss)">${ic("power")}Exit app</button>`:""}</div>`;m.hidden=false};
+function closeMenu(){const m=$("#menu");if(m)m.hidden=true}
+document.addEventListener("click",e=>{const m=$("#menu");if(m&&!m.hidden&&e.target===m)closeMenu()});
+ACT.menuGo=d=>{closeMenu();go(d.v)};
+ACT.exitAsk=()=>{closeMenu();const m=$("#modal");m.innerHTML=`<div class="box" role="dialog" aria-labelledby="exT"><h2 id="exT">Exit Line Study?</h2><p class="note">Your lines and studies are saved on this phone.</p>
+  <div class="row"><button class="btn primary" data-act="exitApp" style="flex:1">Exit</button><button class="btn" data-act="exitCancel" style="flex:1">Cancel</button></div></div>`;m.hidden=false};
+ACT.exitCancel=()=>closeModal();
+ACT.exitApp=async()=>{closeModal();try{leaveView()}catch(e){}
+  try{if(!localStorage.getItem("ls.session")){S.user=null}}catch(e){}
+  if(NP.App&&NP.App.exitApp)NP.App.exitApp();else toast("Close the app from the phone's recent apps screen.")};
+// Users screen (admin)
+const UF={id:"",name:"",uid:"",role:"engineer",pw:""};
+function vUsers(){if(!can("users"))return`<p class="note">Only the admin can manage users.</p>`;
+  return`<div class="row"><button class="link" data-act="home">← Home</button></div><div><h1>Users</h1><p class="lead">People who can sign in on this phone. Give each person their own user ID so the app records who made each study.</p></div>
+  ${approvePanel()}
+  <section class="panel"><h2>Users on this phone</h2><div class="tbl-wrap"><table><thead><tr><th>Name</th><th>User ID</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody>
+  ${Users.list.map(u=>`<tr><td>${esc(u.name)}</td><td class="num">${esc(u.uid)}</td><td><span class="role ${u.role==="admin"?"admin":""}">${ROLES[u.role].l}</span></td><td>${u.active===false?"Off":"Active"}</td>
+   <td><div class="row"><button class="link" data-act="uEdit" data-id="${esc(u.id)}">Edit</button>${u.id!==S.user.id?`<button class="link" data-act="uToggle" data-id="${esc(u.id)}">${u.active===false?"Switch on":"Switch off"}</button>`:""}</div></td></tr>`).join("")}
+  </tbody></table></div></section>
+  <section class="panel"><h2>${UF.id?"Edit user":"Add a user"}</h2><div class="grid">
+  <div class="field"><label class="lbl" for="ufName">Full name</label><input type="text" id="ufName" value="${esc(UF.name)}" data-input="uf" data-f="name"></div>
+  <div class="field"><label class="lbl" for="ufUid">User ID</label><input type="text" id="ufUid" value="${esc(UF.uid)}" data-input="uf" data-f="uid" autocapitalize="none" spellcheck="false"${UF.id?" disabled":""}></div>
+  <div class="field"><label class="lbl" for="ufRole">Role</label><select id="ufRole" data-change="ufRole">${Object.entries(ROLES).map(([k,v])=>`<option value="${k}"${UF.role===k?" selected":""}>${v.l}</option>`).join("")}</select></div>
+  <div class="field"><label class="lbl" for="ufPw">${UF.id?"New password (leave empty to keep)":"Password"}</label><input type="text" id="ufPw" value="${esc(UF.pw)}" data-input="uf" data-f="pw" autocomplete="off"></div></div>
+  <p class="note">${Object.values(ROLES).map(r=>"<b>"+r.l+"</b>: "+r.d).join(" · ")}</p>
+  <div class="row"><button class="btn primary" data-act="uSave">${UF.id?"Save changes":"Add user"}</button>${UF.id?`<button class="btn" data-act="uClear">Cancel</button>`:""}</div></section>
+  <p class="note">Tell each person their user ID and password. They can change the password from the menu. If someone forgets theirs, edit the user here and set a new one. Keep at least two admin accounts so the phone is never locked out.</p>`}
+ACT.uf=(d,el)=>{UF[d.f]=el.value};ACT.ufRole=(d,el)=>{UF.role=el.value};
+ACT.uEdit=d=>{const u=Users.list.find(x=>x.id===d.id);Object.assign(UF,{id:u.id,name:u.name,uid:u.uid,role:u.role,pw:""});render()};
+ACT.uClear=()=>{Object.assign(UF,{id:"",name:"",uid:"",role:"engineer",pw:""});render()};
+ACT.uToggle=async d=>{const u=Users.list.find(x=>x.id===d.id);u.active=u.active===false;await Users.save();render()};
+ACT.uSave=async()=>{const name=UF.name.trim(),uid=UF.uid.trim().toLowerCase();
+  if(!name)return toast("Enter the person's name.");
+  if(UF.id){const u=Users.list.find(x=>x.id===UF.id);
+    if(u.role==="admin"&&UF.role!=="admin"&&Users.list.filter(x=>x.role==="admin"&&x.active!==false).length<2)return toast("Keep at least one active admin.");
+    u.name=name;u.role=UF.role;if(UF.pw){if(UF.pw.length<6)return toast("Password must be at least 6 characters.");const h=await hashPw(UF.pw);u.salt=h.salt;u.hash=h.hash}
+    if(u.id===S.user.id){S.user.name=u.name;S.user.role=u.role;renderUserbar()}}
+  else{if(!/^[a-z0-9._-]{3,30}$/.test(uid))return toast("User ID: 3–30 letters, numbers, dot, dash or underscore.");if(Users.find(uid))return toast("That user ID is already taken.");
+    if(UF.pw.length<6)return toast("Password must be at least 6 characters.");const h=await hashPw(UF.pw);
+    Users.list.push({id:uid,uid,name,role:UF.role,active:true,salt:h.salt,hash:h.hash,created:Date.now()})}
+  try{await Users.save()}catch(e){return toast("Couldn't save: "+(e.message||e))}toast(UF.id?"Saved":"User added");ACT.uClear()};
+// Change own password
+function vPassword(){return`<div class="row"><button class="link" data-act="home">← Home</button></div><section class="panel login"><h1>Change password</h1>
+  <div class="field"><label class="lbl" for="cpOld">Current password</label><input type="password" id="cpOld" autocomplete="current-password" style="width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2)"></div>
+  <div class="field"><label class="lbl" for="cpNew">New password</label><input type="password" id="cpNew" autocomplete="new-password" style="width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2)"></div>
+  <div class="field"><label class="lbl" for="cpNew2">Repeat new password</label><input type="password" id="cpNew2" autocomplete="new-password" style="width:100%;min-height:44px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel-2)"></div>
+  <button class="btn primary big" data-act="cpSave">Change password</button></section>`}
+ACT.cpSave=async()=>{const u=Users.list.find(x=>x.id===S.user.id);const o=$("#cpOld").value,n=$("#cpNew").value,n2=$("#cpNew2").value;
+  if(!u||!(await checkPw(u,o)))return toast("The current password is wrong.");if(n.length<6)return toast("New password must be at least 6 characters.");if(n!==n2)return toast("The new passwords are different.");
+  const h=await hashPw(n);u.salt=h.salt;u.hash=h.hash;await Users.save();toast("Password changed");go("home")};
+/* ===== Home ===== */
+VIEWS.home=()=>{const nl=S.lines.length,ns=S.studies.length,nop=new Set(S.studies.filter(s=>s.opId).map(s=>s.opId)).size;
+  const hr=new Date().getHours(),greet=hr<12?"Good morning":hr<17?"Good afternoon":"Good evening",first=String(S.user.name||"").trim().split(/\s+/)[0];
+  const T=(act,icon,title,sub,cls,extra)=>`<button class="tile ${cls||""}" data-act="${act}"${extra||""}><span class="ti">${ic(icon)}</span><b>${title}</b><span class="note">${sub}</span></button>`;
+  let h=`<section class="hero"><div><div class="eyebrow">${new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})} · ${esc(deviceName())}</div><h1>${greet}, ${esc(first)}</h1><p>Hand and finger time study for sewing lines.</p></div>
+  <div class="hstats"><div><b class="num">${nl}</b><span>lines</span></div><div><b class="num">${nop}</b><span>operations studied</span></div><div><b class="num">${ns}</b><span>studies</span></div></div></section>
+  <section class="quick"><button class="qa primary" data-act="newStudy" data-src="camera">${ic("rec")}<span><b>New time study</b><small>Film one operator with the phone fixed</small></span></button>
+  <button class="qa" data-act="newStudy" data-src="file">${ic("film")}<span><b>Study a video</b><small>Use a video from the phone's gallery</small></span></button></section>
+  <div class="sec-lbl">Lines &amp; reports</div>
+  <section class="tiles">${T("go","chart","Lines &amp; balance",nl+" line"+(nl===1?"":"s"),"",' data-v="lines"')}${T("go","clock","All studies",ns+" on this phone","t3",' data-v="studies"')}
+  ${T("importPick","merge","Combine phones","Import studies from other phones","t2")}${can("edit")?T("backup","cloud","Back up to Drive",pref("lastBackup","")?"Last "+fmtDate(+pref("lastBackup","")):"Keep studies safe","t5"):""}
+  ${can("users")?T("go","users","Users &amp; approvals","Approve new users","t6",' data-v="users"'):""}${T("go","gear","Settings","Phone name · defaults","t7",' data-v="settings"')}</section>
+  <input type="file" id="importFile" accept=".json,application/json,*/*" data-change="importFile" hidden>`;
+  if(ns)h+=`<section class="panel"><div class="row between"><h2>Recent studies</h2><button class="link" data-act="go" data-v="studies">See all</button></div><div class="list">${S.studies.slice(0,4).map(studyItem).join("")}</div></section>`;
+  else h+=`<div class="sec-lbl">How it works</div><section class="steps"><div class="step"><b>1</b><h3>Set up the line</h3><p class="note">Import the operation bulletin (Excel): operations, machines, SMV, manpower.</p></div>
+    <div class="step"><b>2</b><h3>Film each operator</h3><p class="note">Phone fixed about 1 m from the needle, both hands in view, 5–10 cycles. Mark the needle, bin and finished-stack zones once.</p></div>
+    <div class="step"><b>3</b><h3>Get the details</h3><p class="note">Cycle time, every hand motion, value-added %, improvement points, and the line balance with the bottleneck.</p></div></section>`;
+  return h};
+function studyItem(s){const l=lineOf(s.lineId);return`<button class="item" data-act="openStudy" data-id="${esc(s.id)}"><div class="item-main"><h3>${esc(s.opName||"Study")}</h3><div class="meta">${esc(s.operator||"Operator")}${l?" · "+esc(l.name):""} · ${fmtDate(s.created)}${s.device?" · "+esc(s.device):""}</div></div>
+  <span class="row"><span class="num" style="font-weight:600">${s.stats&&s.stats.n?fmtSec(s.stats.ct):"—"}</span>${s.video?'<span class="chip vid">Video</span>':""}</span></button>`}
+ACT.openStudy=d=>{const s=S.studies.find(x=>x.id===d.id);if(!s)return;S.study=s;go("study")};
+
+/* ===== Lines ===== */
+VIEWS.lines=()=>`<div class="row"><button class="link" data-act="home">← Home</button></div><div><h1>Lines</h1><p class="lead">Each line holds its operation bulletin. Studies of its operations build the line balance.</p></div>
+  ${can("edit")?`<div class="row"><button class="btn primary big" data-act="newLine">${ic("plus")}New line</button></div>`:""}
+  <section class="panel">${S.lines.length?`<div class="list">${S.lines.map(l=>{const c=lineCalc(l,studiesOf(l.id));return`<button class="item" data-act="openLine" data-id="${esc(l.id)}"><div class="item-main"><h3>${esc(l.name)}</h3><div class="meta">${esc([l.unit,l.buyer,l.style].filter(Boolean).join(" · "))}${l.unit||l.buyer||l.style?" · ":""}${(l.ops||[]).length} operations · ${c.measured} studied</div></div>${c.bn?`<span class="chip">${Math.round(c.out)}/h</span>`:""}</button>`}).join("")}</div>`:`<p class="note">No lines yet. Create a line and import its operation bulletin.</p>`}</section>`;
+ACT.openLine=d=>{S.line=lineOf(d.id);if(!S.line)return;S.ltab="balance";go("line")};
+ACT.newLine=()=>{LE.init(null);go("lineEdit")};
+
+function lineHead(l,active){const T=[["balance","Balance","chart"],["ops","Operations","list"],["lstudies","Studies","clock"]];
+  return`<div class="row"><button class="link" data-act="go" data-v="lines">← All lines</button></div>
+  <div class="sthead"><div class="eyebrow">${esc([l.unit,l.buyer].filter(Boolean).join(" · ")||"Line")}</div><h1>${esc(l.name)}</h1>${l.style||l.order?`<p class="lead">${esc([l.style&&"Style "+l.style,l.order&&"Order "+l.order].filter(Boolean).join(" · "))}</p>`:""}</div>
+  <nav class="tabs three" aria-label="Line sections">${T.map(([v,lb,i])=>`<button class="${active===v?"on":""}" data-act="ltab" data-v="${v}"${active===v?' aria-current="page"':""}>${ic(i)}<span>${lb}</span></button>`).join("")}</nav>`}
+ACT.ltab=d=>{S.ltab=d.v;render()};
+VIEWS.line=()=>{const l=S.line;if(!l)return VIEWS.lines();const ss=studiesOf(l.id);const c=lineCalc(l,ss);let h=lineHead(l,S.ltab);
+  if(S.ltab==="balance"){
+    h+=`<div class="stats"><div class="stat"><b class="num">${c.target||"—"}</b><span>target pcs / hour</span></div><div class="stat"><b class="num">${c.takt?c.takt.toFixed(1):"—"}</b><span>takt time (s)</span></div>
+      <div class="stat"><b class="num">${c.out?Math.round(c.out):"—"}</b><span>possible output / hour (bottleneck)</span></div><div class="stat"><b class="num">${c.lbr?pct(c.lbr):"—"}</b><span>line balance ratio</span></div>
+      <div class="stat"><b class="num">${c.eff?pct(c.eff):"—"}</b><span>line efficiency at bottleneck</span></div><div class="stat"><b class="num">${c.measured}/${(l.ops||[]).length}</b><span>operations studied</span></div></div>`;
+    if(!(l.ops||[]).length)h+=`<section class="panel empty">${ic("list","lg")}<h2>No operations yet</h2><p class="note">Import the operation bulletin or add operations by hand.</p>${can("edit")?`<div class="row"><button class="btn primary" data-act="bulletin">${ic("xls")}Import bulletin</button><button class="btn" data-act="editLine">Add by hand</button></div>`:""}</section>`;
+    else{h+=`<section class="panel"><div class="row between"><h2>Line balance</h2><span class="note">seconds per piece at each station</span></div>${balanceChart(c)}
+      <div class="legend"><span><i style="--c:var(--accent);height:10px"></i>Measured (study)</span><span><i style="--c:#b8c4bf;height:10px"></i>From bulletin SMV (not studied yet)</span><span><i style="--c:var(--miss)" class="dash"></i>Takt time</span><span><i style="--c:var(--slow);height:10px"></i>Bottleneck</span></div></section>`;
+      if(c.bn)h+=`<section class="panel"><h2>What to do</h2><ul class="tips">${balanceTips(c).map(t=>`<li>${t}</li>`).join("")}</ul></section>`}
+    h+=`<div class="row">${can("edit")?`<button class="btn sm" data-act="editLine">${ic("pen")}Edit line</button><button class="btn sm" data-act="bulletin">${ic("xls")}Import bulletin</button>`:""}
+      <button class="btn sm" data-act="linePdf">${ic("pdf")}Report PDF</button><button class="btn sm" data-act="lineXls">${ic("xls")}Excel</button><button class="btn sm" data-act="sharePack">${ic("share")}Share with other phones</button></div>`}
+  else if(S.ltab==="ops"){
+    h+=`<section class="panel flush"><div class="tbl-wrap" style="border:0"><table><thead><tr><th>No</th><th>Operation</th><th>Machine</th><th class="r">MP</th><th class="r">SMV</th><th class="r">Actual</th><th class="r">Diff</th><th class="r">Pcs/h</th><th></th></tr></thead><tbody>
+      ${c.ops.map(x=>`<tr class="${x===c.bn?"bn":""}"><td class="num">${esc(x.op.no??"")}</td><td style="white-space:normal;min-width:140px">${esc(x.op.name)}</td><td>${esc(x.op.machine||"")}</td><td class="r num">${x.n}</td><td class="r num">${(+x.op.smv||0).toFixed(2)}</td>
+        <td class="r num">${x.act?(x.act/60).toFixed(2):"—"}</td><td class="r num" style="color:${x.diff==null?"inherit":x.diff>0.1?"var(--miss)":x.diff<-0.1?"var(--ok)":"inherit"}">${x.diff==null?"":(x.diff>0?"+":"")+Math.round(x.diff*100)+"%"}</td>
+        <td class="r num">${x.perHour?Math.round(x.perHour):"—"}</td><td><button class="btn sm" data-act="studyOp" data-op="${esc(x.op.id)}">${ic("rec")}Study</button></td></tr>`).join("")||`<tr><td colspan="9" class="note">No operations.</td></tr>`}
+      </tbody></table></div></section><p class="note">SMV and Actual are minutes per piece for one operator. Pcs/h is the station output with its manpower (MP). Tap Study to film an operator of that operation.</p>
+      ${can("edit")?`<div class="row"><button class="btn sm" data-act="editLine">${ic("pen")}Edit operations</button><button class="btn sm" data-act="bulletin">${ic("xls")}Import bulletin</button></div>`:""}`}
+  else{h+=ss.length?`<section class="panel"><div class="list">${ss.map(studyItem).join("")}</div></section>`:`<section class="panel empty">${ic("clock","lg")}<h2>No studies yet</h2><p class="note">Open Operations and tap Study, or combine studies made on other phones.</p></section>`;
+    h+=`<div class="row"><button class="btn sm" data-act="importPick">${ic("merge")}Combine studies from other phones</button></div><input type="file" id="importFile" accept=".json,application/json,*/*" data-change="importFile" hidden>`}
+  return h};
+function balanceChart(c){const rows=c.ops.filter(x=>x.ct>0);if(!rows.length)return`<p class="note">Add SMV values to the operations to see the balance.</p>`;
+  const mx=Math.max(c.takt||0,...rows.map(x=>x.ct))*1.08;
+  return`<div class="bal">${c.takt?`<div class="takt${c.takt/mx>0.7?" lft":""}" style="left:calc(var(--lw) + (100% - var(--lw)) * ${(c.takt/mx).toFixed(4)})"><span>Takt ${c.takt.toFixed(1)} s</span></div>`:""}
+    ${rows.map(x=>`<div class="brow"><span class="bl" title="${esc(x.op.name)}"><b class="num">${esc(x.op.no??"")}</b> ${esc(x.op.name)}</span><span class="bt"><i class="${x===c.bn?"bn":x.measured?"m":"p"}" style="width:${(x.ct/mx*100).toFixed(2)}%"></i><em class="num">${x.ct.toFixed(1)}${x.n>1?` <small>÷${x.n}</small>`:""}</em></span></div>`).join("")}</div>`}
+function balanceTips(c){const t=[];const bn=c.bn;
+  t.push(`Bottleneck: <b>${esc(bn.op.name)}</b>, ${bn.ct.toFixed(1)} s per piece${bn.n>1?" with "+bn.n+" operators":""}. The line can make about <b>${Math.round(c.out)}</b> pieces per hour.`);
+  if(c.takt&&bn.ct>c.takt){const need=Math.ceil((bn.act||bn.smvS)/c.takt);t.push(`To reach the target of ${c.target}/h the bottleneck needs ${need} operator${need>1?"s":""} (now ${bn.n}), or its method must save ${(bn.ct-c.takt).toFixed(1)} s per piece.`)}
+  const over=c.ops.filter(x=>c.takt&&x.ct>c.takt&&x!==bn);if(over.length)t.push(`Also above takt: ${over.map(x=>esc(x.op.name)).join(", ")}.`);
+  const low=c.ops.filter(x=>x.ct>0&&bn&&x.ct<bn.ct*0.6);if(low.length)t.push(`Spare capacity at ${low.slice(0,4).map(x=>esc(x.op.name)).join(", ")}: these operators can take over small elements from the bottleneck.`);
+  const slow=c.ops.filter(x=>x.diff!=null&&x.diff>0.15);if(slow.length)t.push(`Slower than the bulletin by more than 15%: ${slow.slice(0,4).map(x=>esc(x.op.name)+" (+"+Math.round(x.diff*100)+"%)").join(", ")}. Open their studies for the hand-motion details.`);
+  if(c.measured<(c.ops||[]).length)t.push(`${(c.ops||[]).length-c.measured} operations are not studied yet; their bars use the bulletin SMV.`);
+  return t}
+ACT.studyOp=d=>{NS.init("camera");NS.lineId=S.line.id;NS.opId=d.op;go("setup")};
+
+/* ===== Line edit ===== */
+const LE={l:null,init(l){this.l=l?JSON.parse(JSON.stringify(l)):{id:uid(),name:"",unit:"",buyer:"",style:"",order:"",target:"",ops:[],created:Date.now(),by:S.user.name};this.isNew=!l}};
+VIEWS.lineEdit=()=>{const l=LE.l;const F=(k,lb,ph,type="text")=>`<div class="field"><label class="lbl" for="le_${k}">${lb}</label><input type="${type}" id="le_${k}" value="${esc(l[k]??"")}" data-input="leF" data-k="${k}" placeholder="${ph||""}"${type==="number"?' inputmode="decimal"':""}></div>`;
+  return`<div class="row"><button class="link" data-act="leCancel">← ${LE.isNew?"Cancel":"Back without saving"}</button></div><div><div class="eyebrow">${LE.isNew?"New line":"Edit line"}</div><h1>${esc(l.name||"Line")}</h1></div>
+  <section class="panel"><div class="grid">${F("name","Line name","e.g. Line 7")}${F("unit","Unit / floor","e.g. Unit-2, 3rd floor")}${F("buyer","Buyer","")}${F("style","Style","")}${F("order","Order / PO","")}${F("target","Target output per hour","e.g. 120","number")}</div></section>
+  <section class="panel"><div class="row between"><h2>Operations</h2><button class="btn sm" data-act="bulletinFromEdit">${ic("xls")}Import bulletin</button></div>
+  <div class="opsed">${(l.ops||[]).map((o,i)=>`<div class="oprow"><input type="text" value="${esc(o.no??"")}" data-input="leO" data-i="${i}" data-k="no" aria-label="No" class="num"><input type="text" value="${esc(o.name)}" data-input="leO" data-i="${i}" data-k="name" placeholder="Operation" aria-label="Operation">
+    <input type="text" value="${esc(o.machine||"")}" data-input="leO" data-i="${i}" data-k="machine" placeholder="Machine" aria-label="Machine"><input type="number" inputmode="decimal" step="0.01" value="${esc(o.smv??"")}" data-input="leO" data-i="${i}" data-k="smv" placeholder="SMV" aria-label="SMV" class="num">
+    <input type="number" inputmode="decimal" step="1" value="${esc(o.mp??1)}" data-input="leO" data-i="${i}" data-k="mp" placeholder="MP" aria-label="Manpower" class="num"><button class="btn sm ghost danger" data-act="leDel" data-i="${i}" aria-label="Remove operation">${ic("trash")}</button></div>`).join("")}</div>
+  <div class="ophead note">No · Operation · Machine · SMV (min) · Manpower</div>
+  <div class="row"><button class="btn sm" data-act="leAdd">${ic("plus")}Add operation</button><span class="note">Total SMV <b class="num" id="leTot">${(l.ops||[]).reduce((a,o)=>a+(+o.smv||0),0).toFixed(2)}</b> min · ${(l.ops||[]).reduce((a,o)=>a+(+o.mp||0),0)} operators</span></div></section>
+  <button class="btn primary big" data-act="leSave">${ic("check")}Save line</button>
+  ${!LE.isNew&&can("delete")?`<button class="btn danger" data-act="leDelLine">${ic("trash")}Delete this line</button>`:""}`};
+ACT.leF=(d,el)=>{LE.l[d.k]=el.value};
+ACT.leO=(d,el)=>{const o=LE.l.ops[+d.i];o[d.k]=el.value;if(d.k==="smv"){const t=$("#leTot");if(t)t.textContent=LE.l.ops.reduce((a,o)=>a+(+o.smv||0),0).toFixed(2)}};
+ACT.leAdd=()=>{const ops=LE.l.ops;const last=ops[ops.length-1];ops.push({id:uid(),no:last&&!isNaN(+last.no)?+last.no+1:ops.length+1,name:"",machine:"",smv:"",mp:1});render();const ins=document.querySelectorAll(".oprow");const r=ins[ins.length-1];if(r)r.querySelectorAll("input")[1].focus()};
+ACT.leDel=d=>{const o=LE.l.ops[+d.i];const n=S.studies.filter(s=>s.opId===o.id).length;if(n&&!confirm(`${n} stud${n>1?"ies belong":"y belongs"} to this operation. Remove the operation anyway? The studies stay on the phone.`))return;LE.l.ops.splice(+d.i,1);render()};
+ACT.leCancel=()=>{if(LE.isNew)go("lines");else{go("line")}};
+ACT.leSave=async()=>{const l=LE.l;if(!l.name.trim())return toast("Give the line a name.");l.name=l.name.trim();l.target=l.target===""?"":+l.target||"";
+  l.ops=l.ops.filter(o=>String(o.name||"").trim()).map(o=>({...o,name:String(o.name).trim(),smv:o.smv===""?"":+o.smv||0,mp:Math.max(1,+o.mp||1)}));
+  await DB.putLine(l);S.line=l;toast("Line saved");go("line")};
+ACT.leDelLine=async()=>{const l=LE.l;if(!confirm(`Delete line "${l.name}"? Its studies stay on the phone but lose the link to the line.`))return;await DB.delLine(l.id);toast("Line deleted");go("lines")};
+ACT.editLine=()=>{LE.init(S.line);go("lineEdit")};
+
+/* ===== Operation bulletin import (Excel / CSV) ===== */
+const BI={rows:null,hdr:0,map:{},name:"",sheets:[],sheet:0,wb:null,from:"line"};
+const BFIELDS=[["no","No / Sl","^(sl|s\\.?\\s?l|no\\b|#|seq|sr|op\\.?\\s*no|serial)"],["name","Operation","(operation|description|process|op\\.?\\s*name|task|details)"],["machine","Machine","(machine|m\\s*/\\s*c|^mc\\b|m\\.c|type of m)"],["smv","SMV (min)","(smv|sam\\b|std\\.?\\s*min|standard min|s\\.m\\.v)"],["mp","Manpower","(manpower|m\\s*/\\s*p|^mp\\b|operator|no\\.?\\s*of\\s*op|worker|w/p)"]];
+ACT.bulletin=()=>{BI.from="line";BI.rows=null;go("bulletin")};
+ACT.bulletinFromEdit=()=>{BI.from="edit";BI.rows=null;go("bulletin")};
+VIEWS.bulletin=()=>{const l=BI.from==="edit"?LE.l:S.line;let h=`<div class="row"><button class="link" data-act="biBack">← Back</button></div><div><div class="eyebrow">${esc(l?l.name:"Line")}</div><h1>Import bulletin</h1><p class="lead">Choose the operation bulletin (Excel .xlsx or .csv). The app finds the columns; check them before importing.</p></div>
+  <section class="panel"><div class="row"><label class="btn primary" for="biFile">${ic("xls")}Choose Excel file</label><input type="file" id="biFile" accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" data-change="biFile" hidden><span class="note">${esc(BI.name||"")}</span></div>
+  ${BI.sheets.length>1?`<div class="field"><label class="lbl" for="biSheet">Sheet</label><select id="biSheet" data-change="biSheet">${BI.sheets.map((s,i)=>`<option value="${i}"${i===BI.sheet?" selected":""}>${esc(s)}</option>`).join("")}</select></div>`:""}</section>`;
+  if(BI.rows){const R=BI.rows,ncol=Math.max(...R.slice(0,60).map(r=>r.length),1);const colName=i=>{const v=(R[BI.hdr]||[])[i];return String.fromCharCode(65+(i%26))+(v?": "+String(v).slice(0,24):"")};
+    h+=`<section class="panel"><h2>Columns</h2><div class="field"><label class="lbl" for="biHdr">Header row</label><select id="biHdr" data-change="biHdr">${R.slice(0,25).map((r,i)=>`<option value="${i}"${i===BI.hdr?" selected":""}>Row ${i+1}: ${esc(r.filter(x=>x!=="").slice(0,4).join(" | ").slice(0,60))}</option>`).join("")}</select></div>
+      <div class="grid">${BFIELDS.map(([k,lb])=>`<div class="field"><label class="lbl" for="bi_${k}">${lb}</label><select id="bi_${k}" data-change="biMap" data-k="${k}"><option value="-1">— not in the file —</option>${Array.from({length:ncol},(_,i)=>`<option value="${i}"${BI.map[k]===i?" selected":""}>${esc(colName(i))}</option>`).join("")}</select></div>`).join("")}</div></section>`;
+    const ops=biOps();h+=`<section class="panel"><div class="row between"><h2>Preview</h2><span class="note">${ops.length} operations · total SMV ${ops.reduce((a,o)=>a+(+o.smv||0),0).toFixed(2)}</span></div>
+      <div class="tbl-wrap"><table><thead><tr><th>No</th><th>Operation</th><th>Machine</th><th class="r">SMV</th><th class="r">MP</th></tr></thead><tbody>${ops.slice(0,12).map(o=>`<tr><td class="num">${esc(o.no)}</td><td style="white-space:normal">${esc(o.name)}</td><td>${esc(o.machine)}</td><td class="r num">${o.smv===""?"":(+o.smv).toFixed(3)}</td><td class="r num">${o.mp}</td></tr>`).join("")}${ops.length>12?`<tr><td colspan="5" class="note">… ${ops.length-12} more</td></tr>`:""}</tbody></table></div>
+      <div class="row"><button class="btn primary" data-act="biImport" data-mode="replace"${ops.length?"":" disabled"}>Replace operations</button><button class="btn" data-act="biImport" data-mode="add"${ops.length?"":" disabled"}>Add to existing</button></div>
+      <p class="note">Replacing keeps studies linked when the operation name stays the same.</p></section>`}
+  return h};
+ACT.biBack=()=>go(BI.from==="edit"?"lineEdit":"line");
+function cellVal(v){if(v==null)return"";if(typeof v==="object"){if(v instanceof Date)return v.toISOString().slice(0,10);if("result" in v)return cellVal(v.result);if(v.richText)return v.richText.map(x=>x.text).join("");if("text" in v)return String(v.text);return""}return v}
+function parseCsv(t){const rows=[];let row=[],f="",q=false;for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}else if(c==='"')q=true;else if(c===","||c===";"||c==="\t"){row.push(f);f=""}else if(c==="\n"||c==="\r"){if(c==="\r"&&t[i+1]==="\n")i++;row.push(f);rows.push(row);row=[];f=""}else f+=c}if(f||row.length){row.push(f);rows.push(row)}
+  return rows.map(r=>r.map(x=>{const s=String(x).trim();return s!==""&&!isNaN(+s)?+s:s}))}
+ACT.biFile=async(d,el)=>{const f=el.files&&el.files[0];if(!f)return;BI.name=f.name;$("#busy").textContent="Reading…";$("#busy").hidden=false;
+  try{if(/\.csv$/i.test(f.name)){BI.wb=null;BI.sheets=[];BI.rows=parseCsv(await f.text())}
+    else{await loadLib("exceljs");const wb=new ExcelJS.Workbook();await wb.xlsx.load(await f.arrayBuffer());BI.wb=wb;BI.sheets=wb.worksheets.map(w=>w.name);
+      let best=0,bs=-1;wb.worksheets.forEach((w,i)=>{const sc=w.actualRowCount||w.rowCount;if(sc>bs){bs=sc;best=i}});BI.sheet=best;BI.rows=sheetRows(wb.worksheets[best])}
+    biDetect()}catch(e){toast("Couldn't read that file: "+(e.message||e));BI.rows=null}
+  $("#busy").hidden=true;el.value="";render()};
+function sheetRows(ws){const rows=[];ws.eachRow({includeEmpty:true},(r,n)=>{const a=[];r.eachCell({includeEmpty:true},(c,k)=>{a[k-1]=cellVal(c.value)});for(let i=0;i<a.length;i++)if(a[i]===undefined)a[i]="";rows[n-1]=a});for(let i=0;i<rows.length;i++)if(!rows[i])rows[i]=[];return rows}
+ACT.biSheet=(d,el)=>{BI.sheet=+el.value;BI.rows=sheetRows(BI.wb.worksheets[BI.sheet]);biDetect();render()};
+ACT.biHdr=(d,el)=>{BI.hdr=+el.value;biDetect(true);render()};
+ACT.biMap=(d,el)=>{BI.map[d.k]=+el.value;render()};
+function biDetect(keepHdr){const R=BI.rows;const re=BFIELDS.map(([k,,r])=>[k,new RegExp(r,"i")]);
+  if(!keepHdr){let best=0,bs=0;for(let i=0;i<Math.min(25,R.length);i++){const sc=re.filter(([k,x])=>R[i].some(c=>typeof c==="string"&&x.test(c.trim()))).length;if(sc>bs){bs=sc;best=i}}BI.hdr=best}
+  const H=(R[BI.hdr]||[]).map(c=>String(c||"").trim());BI.map={};
+  for(const[k,x]of re){let idx=-1;for(let i=0;i<H.length;i++){if(x.test(H[i])&&!Object.values(BI.map).includes(i)){idx=i;break}}BI.map[k]=idx}
+  if(BI.map.name<0){let best=-1,bl=0;const sample=R.slice(BI.hdr+1,BI.hdr+20);for(let i=0;i<H.length;i++){const L=mean(sample.map(r=>typeof r[i]==="string"?r[i].length:0));if(L>bl){bl=L;best=i}}BI.map.name=best}}
+function biOps(){const R=BI.rows,m=BI.map,out=[];if(m.name==null||m.name<0)return out;
+  for(let i=BI.hdr+1;i<R.length;i++){const r=R[i]||[];const name=String(r[m.name]??"").trim();if(!name)continue;
+    const smvRaw=m.smv>=0?r[m.smv]:"";const smv=typeof smvRaw==="number"?smvRaw:parseFloat(String(smvRaw).replace(",","."));
+    if(/^(total|grand total|sum)\b/i.test(name))continue;if(m.smv>=0&&!(smv>0))continue;
+    const mpRaw=m.mp>=0?r[m.mp]:1;const mp=Math.max(1,Math.round(+mpRaw||1));
+    out.push({id:uid(),no:m.no>=0?r[m.no]:out.length+1,name,machine:m.machine>=0?String(r[m.machine]??"").trim():"",smv:isFinite(smv)?+smv.toFixed(4):"",mp})}
+  return out}
+ACT.biImport=async d=>{const ops=biOps();if(!ops.length)return;const l=BI.from==="edit"?LE.l:JSON.parse(JSON.stringify(S.line));
+  if(d.mode==="replace"){const old=l.ops||[];for(const o of ops){const m=old.find(x=>x.name.trim().toLowerCase()===o.name.toLowerCase());if(m)o.id=m.id}l.ops=ops}else l.ops=(l.ops||[]).concat(ops);
+  if(BI.from==="edit"){toast(ops.length+" operations added. Save the line to keep them.");go("lineEdit");return}
+  await DB.putLine(l);S.line=l;S.ltab="ops";toast(ops.length+" operations imported");go("line")};
+/* ===== New study: who and what ===== */
+const NS={init(src){Object.assign(this,{src,lineId:pref("lastLine",""),opId:"",opName:"",operator:"",empId:"",file:null});if(!lineOf(this.lineId))this.lineId=S.lines[0]?S.lines[0].id:""}};
+ACT.newStudy=d=>{NS.init(d.src||"camera");go("setup")};
+VIEWS.setup=()=>{const l=lineOf(NS.lineId);const ops=l?l.ops||[]:[];
+  return`<div class="row"><button class="link" data-act="home">← Home</button></div><div><div class="eyebrow">New time study</div><h1>Who and what</h1></div>
+  <section class="panel"><div class="grid">
+   <div class="field"><label class="lbl" for="nsLine">Line</label><select id="nsLine" data-change="nsLine"><option value="">— No line (single study) —</option>${S.lines.map(x=>`<option value="${esc(x.id)}"${x.id===NS.lineId?" selected":""}>${esc(x.name)}</option>`).join("")}</select></div>
+   ${l?`<div class="field"><label class="lbl" for="nsOp">Operation</label><select id="nsOp" data-change="nsOp"><option value="">— choose —</option>${ops.map(o=>{const n=S.studies.filter(s=>s.opId===o.id).length;return`<option value="${esc(o.id)}"${o.id===NS.opId?" selected":""}>${esc(o.no??"")} ${esc(o.name)}${n?` (${n} done)`:""}</option>`}).join("")}</select></div>`
+     :`<div class="field"><label class="lbl" for="nsOpName">Operation</label><input type="text" id="nsOpName" value="${esc(NS.opName)}" data-input="nsF" data-k="opName" placeholder="e.g. Side seam"></div>`}
+   <div class="field"><label class="lbl" for="nsOper">Operator name</label><input type="text" id="nsOper" value="${esc(NS.operator)}" data-input="nsF" data-k="operator"></div>
+   <div class="field"><label class="lbl" for="nsEmp">Operator ID / card no.</label><input type="text" id="nsEmp" value="${esc(NS.empId)}" data-input="nsF" data-k="empId"></div></div>
+   ${l&&!ops.length?`<p class="note" style="color:var(--slow)">This line has no operations yet. Import its bulletin first, or study without a line.</p>`:""}</section>
+  <div class="seg"><button class="${NS.src==="camera"?"on":""}" data-act="nsSrc" data-v="camera">${ic("camera")} Film now</button><button class="${NS.src==="file"?"on":""}" data-act="nsSrc" data-v="file">${ic("film")} Video from gallery</button></div>
+  ${NS.src==="file"?`<div class="row"><label class="btn" for="nsFile">Choose video</label><input type="file" id="nsFile" accept="video/*" data-change="nsFile" hidden><span class="note">${NS.file?esc(NS.file.name)+" · "+(NS.file.size/1048576).toFixed(1)+" MB":"Film with the phone's normal camera (fixed), then choose the video here."}</span></div>`:""}
+  <button class="btn primary big" data-act="nsNext">${NS.src==="file"?"Next: mark zones":"Next: camera"} ${ic("next")}</button>
+  <section class="panel"><h2>Camera for finger detail</h2><ul class="tips"><li>Phone on a clamp or stand, <b>about 1 m</b> from the needle, looking down at the machine bed (front-above or over the shoulder).</li>
+   <li>Both hands, the needle, the bundle and the finished stack in the picture. Landscape is best.</li><li>Good light on the hands, no strong light behind. Bare hands track best.</li><li>Do not touch the phone while filming. Film 5–10 complete cycles (pieces).</li></ul></section>`};
+ACT.nsLine=(d,el)=>{NS.lineId=el.value;NS.opId="";render()};
+ACT.nsOp=(d,el)=>{NS.opId=el.value};
+ACT.nsF=(d,el)=>{NS[d.k]=el.value};
+ACT.nsSrc=d=>{NS.src=d.v;render()};
+ACT.nsFile=(d,el)=>{const f=el.files&&el.files[0];if(f){NS.file=f;render()}};
+ACT.nsNext=()=>{const l=lineOf(NS.lineId);if(l&&!NS.opId)return toast("Choose the operation.");if(!l&&!NS.opName.trim())return toast("Type the operation name.");
+  if(l)setPref("lastLine",l.id);
+  if(NS.src==="file"){if(!NS.file)return toast("Choose the video first.");A.init(NS.file,NS.file.type||"video/mp4",true);go("zones")}else go("record")};
+
+/* ===== Record (camera) ===== */
+const RC={stream:null,rec:null,chunks:[],recording:false,t0:0,raf:0,last:0,mime:"",err:""};
+VIEWS.record=()=>`<div class="row"><button class="link" data-act="go" data-v="setup">← Back</button></div>
+  <div><div class="eyebrow">${esc(nsTitle())}</div><h1>Film the operator</h1></div>
+  <div class="stage wide" id="stage"><video id="rv" playsinline muted></video><canvas id="rc"></canvas>
+    <div class="hud"><span class="pill" id="hudL">Preview</span><span class="pill num" id="hudR"></span></div><div class="msg" id="rmsg"><p class="note" id="rmsgT">Opening camera…</p></div></div>
+  <div class="row"><button class="btn primary big" id="recBtn" data-act="recToggle" disabled>${ic("rec")}Start filming</button></div>
+  <p class="note">The coloured lines show the fingers the app can see. Orange = right hand, blue = left hand. Keep both visible.</p>`;
+function nsTitle(){const l=lineOf(NS.lineId),o=opOf(l,NS.opId);return[l&&l.name,o?o.name:NS.opName,NS.operator].filter(Boolean).join(" · ")}
+function recMsg(t){const m=$("#rmsg");if(!m)return;if(t){m.hidden=false;$("#rmsgT").textContent=t}else m.hidden=true}
+MOUNTS.record=async()=>{RC.recording=false;
+  if(!navigator.mediaDevices){recMsg(NATIVE?"This phone's browser engine has no camera support. Update Android System WebView from the Play Store.":"The camera needs an https:// page.");return}
+  Hands.load().catch(()=>{});
+  try{RC.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment",width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30}},audio:false});
+    const v=$("#rv");v.srcObject=RC.stream;await v.play();const c=$("#rc");c.width=v.videoWidth;c.height=v.videoHeight;$("#stage").style.aspectRatio=v.videoWidth+"/"+v.videoHeight;recMsg(null);$("#recBtn").disabled=false;keepAwake();
+    cancelAnimationFrame(RC.raf);RC.raf=requestAnimationFrame(recLoop)}
+  catch(e){recMsg(e&&e.name==="NotAllowedError"?"Camera permission was refused. Open Android Settings → Apps → Line Study → Permissions → Camera → Allow.":"Couldn't open the camera: "+(e.message||e))}};
+function recLoop(){if(S.view!=="record")return;RC.raf=requestAnimationFrame(recLoop);const v=$("#rv");if(!v||v.readyState<2)return;
+  if(RC.recording)$("#hudR").textContent=fmtClock(performance.now()-RC.t0);
+  const now=performance.now();if(!Hands.lm||now-RC.last<(RC.recording?250:120))return;RC.last=now;
+  const hs=Hands.detect(v);const c=$("#rc"),x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);for(const h of hs)drawHand(x,h.lm,c.width,c.height,HCOL[h.side||"a"],Math.max(3,c.width/250));
+  if(!RC.recording)$("#hudL").textContent=hs.length===2?"2 hands ✓":hs.length===1?"1 hand":"No hands";}
+function stopCamera(){cancelAnimationFrame(RC.raf);if(RC.rec){try{RC.rec.stop()}catch(e){}RC.rec=null}RC.recording=false;if(RC.stream){RC.stream.getTracks().forEach(t=>t.stop());RC.stream=null}}
+ACT.recToggle=async()=>{if(RC.recording)return finishRec();
+  if(!window.MediaRecorder)return toast("This phone can't record video in the app. Film with the camera app and use Video from gallery.");
+  const types=["video/webm;codecs=vp8","video/webm;codecs=vp9","video/webm","video/mp4"];const mt=types.find(t=>{try{return MediaRecorder.isTypeSupported(t)}catch(e){return false}})||"";
+  try{RC.chunks=[];const r=new MediaRecorder(RC.stream,mt?{mimeType:mt,videoBitsPerSecond:8000000}:{videoBitsPerSecond:8000000});RC.mime=r.mimeType||mt||"video/webm";r.ondataavailable=e=>{if(e.data&&e.data.size)RC.chunks.push(e.data)};r.start(1000);RC.rec=r}
+  catch(e){return toast("Couldn't start recording: "+(e.message||e))}
+  RC.recording=true;RC.t0=performance.now();beep(1320,.2);const b=$("#recBtn");b.innerHTML=ic("rec")+"Stop";b.classList.add("stop");const h=$("#hudL");h.textContent="Filming";h.classList.add("rec")};
+async function finishRec(){const r=RC.rec;RC.rec=null;RC.recording=false;beep(440,.25);const b=$("#recBtn");if(b){b.disabled=true;b.textContent="Finishing video…"}
+  if(r&&r.state!=="inactive")await new Promise(res=>{r.onstop=()=>res();try{r.stop()}catch(e){res()}setTimeout(res,5000)});
+  const blob=new Blob(RC.chunks,{type:(RC.mime||"video/webm").split(";")[0]});RC.chunks=[];
+  if(blob.size<5000){toast("The video came out empty. Try again.");render();return}
+  A.init(blob,blob.type,false);go("zones")}
+
+/* ===== The recording being studied ===== */
+const A={init(blob,mime,fromFile){if(this.url&&this.own)try{URL.revokeObjectURL(this.url)}catch(e){}
+  Object.assign(this,{blob,mime:mime||"video/webm",fromFile,url:URL.createObjectURL(blob),own:true,zones:null,frames:null,la:"",lb:"",rg:null,cuts:[],skip:[],method:"",ar:16/9,dur:0,fps:0,edit:null,rating:100,allow:+pref("allow",15),keep:!fromFile||blob.size<150*1048576})}};
+
+/* ===== Zones ===== */
+const ZN={tool:"needle",drag:null,frameT:0};
+VIEWS.zones=()=>`<div class="row"><button class="link" data-act="go" data-v="${A.fromFile?"setup":"record"}">← ${A.fromFile?"Back":"Film again"}</button></div>
+  <div><div class="eyebrow">${esc(nsTitle())}</div><h1>Mark the work zones</h1><p class="lead">Drag a box on the picture for each zone. The needle zone is needed to recognise sewing; the bin and stack zones make pick-up, disposal and cycle counting exact.</p></div>
+  <div class="seg zt">${Object.entries(ZT).map(([k,z])=>`<button class="${ZN.tool===k?"on":""}" data-act="znTool" data-k="${k}" style="--zc:${z.c}"><i></i>${z.l.split(" (")[0].replace("Needle / work point","Needle")}</button>`).join("")}</div>
+  <section class="panel flush"><div class="vstage zstage" id="zst"><video id="zv" playsinline muted preload="auto"></video><canvas id="zc"></canvas></div>
+   <div class="pad"><input type="range" id="zr" min="0" max="1000" value="300" aria-label="Choose a frame"><div class="row between"><span class="note" id="zHands">Looking for hands…</span><button class="btn sm" data-act="znClear">Clear zones</button></div></div></section>
+  ${lastZones()?`<button class="btn" data-act="znLast">${ic("grid")}Use the zones from the last study of this operation</button>`:""}
+  <button class="btn primary big" data-act="znGo">${ic("hand")}Analyse the hands</button>
+  <p class="note">Analysis goes through every frame and takes about ${pref("rate","0.5")==="0.3"?"3×":"2×"} the video length. Keep the app open.</p>`;
+function lastZones(){const s=S.studies.find(x=>NS.opId?x.opId===NS.opId:x.opName===NS.opName);return s&&s.zones&&s.zones.length?s.zones:null}
+MOUNTS.zones=()=>{const v=$("#zv"),c=$("#zc"),r=$("#zr");if(!A.zones)A.zones=[];
+  v.addEventListener("loadedmetadata",()=>{fixDuration(v).then(()=>{A.dur=v.duration*1000;A.ar=v.videoWidth/v.videoHeight;c.width=v.videoWidth;c.height=v.videoHeight;$("#zst").style.aspectRatio=v.videoWidth+"/"+v.videoHeight;try{v.currentTime=v.duration*.3}catch(e){}})},{once:true});
+  v.addEventListener("seeked",()=>znDraw(true));v.src=A.url;
+  r.addEventListener("input",()=>{if(isFinite(v.duration))v.currentTime=v.duration*(+r.value/1000)});
+  Hands.load().then(()=>znDraw(true)).catch(()=>{const h=$("#zHands");if(h)h.textContent="Couldn't start hand tracking on this phone."});
+  const pt=ev=>{const b=c.getBoundingClientRect();return{x:clamp((ev.clientX-b.left)/b.width,0,1),y:clamp((ev.clientY-b.top)/b.height,0,1)}};
+  c.addEventListener("pointerdown",ev=>{ev.preventDefault();try{c.setPointerCapture(ev.pointerId)}catch(e){}const p=pt(ev);ZN.drag={x1:p.x,y1:p.y,x2:p.x,y2:p.y}});
+  c.addEventListener("pointermove",ev=>{if(!ZN.drag)return;const p=pt(ev);ZN.drag.x2=p.x;ZN.drag.y2=p.y;znDraw()});
+  const up=()=>{const d=ZN.drag;ZN.drag=null;if(d&&Math.abs(d.x2-d.x1)>0.03&&Math.abs(d.y2-d.y1)>0.03){A.zones=A.zones.filter(z=>z.type!==ZN.tool);A.zones.push({type:ZN.tool,x:Math.min(d.x1,d.x2),y:Math.min(d.y1,d.y2),w:Math.abs(d.x2-d.x1),h:Math.abs(d.y2-d.y1)});
+      const order=Object.keys(ZT);const nx=order.find(k=>!A.zones.some(z=>z.type===k));if(nx){ZN.tool=nx;document.querySelectorAll("[data-act=znTool]").forEach(b=>b.classList.toggle("on",b.dataset.k===nx))}}znDraw()};
+  c.addEventListener("pointerup",up);c.addEventListener("pointercancel",up)};
+let znHands=[];
+function znDraw(detect){const v=$("#zv"),c=$("#zc");if(!v||!c||!c.width)return;const x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);
+  if(detect&&Hands.lm&&v.readyState>=2){znHands=Hands.detect(v);const h=$("#zHands");if(h)h.textContent=znHands.length===2?"Both hands found in this frame ✓":znHands.length===1?"Only one hand found in this frame":"No hands found in this frame. Slide to another moment."}
+  for(const h of znHands)drawHand(x,h.lm,c.width,c.height,HCOL[h.side||"a"],Math.max(3,c.width/260));
+  drawZones(x,c.width,c.height,A.zones);const d=ZN.drag;if(d){x.save();x.strokeStyle=ZT[ZN.tool].c;x.lineWidth=Math.max(3,c.width/250);x.strokeRect(Math.min(d.x1,d.x2)*c.width,Math.min(d.y1,d.y2)*c.height,Math.abs(d.x2-d.x1)*c.width,Math.abs(d.y2-d.y1)*c.height);x.restore()}}
+function stopZoneView(){const v=$("#zv");if(v){try{v.pause();v.removeAttribute("src");v.load()}catch(e){}}}
+ACT.znTool=d=>{ZN.tool=d.k;document.querySelectorAll("[data-act=znTool]").forEach(b=>b.classList.toggle("on",b.dataset.k===d.k))};
+ACT.znClear=()=>{A.zones=[];ZN.tool="needle";render()};
+ACT.znLast=()=>{A.zones=JSON.parse(JSON.stringify(lastZones()));znDraw();toast("Zones copied. Check they still fit the picture.")};
+ACT.znGo=()=>{if(!A.zones.some(z=>z.type==="needle")&&!confirm("No needle zone: the app can't tell sewing from other handling, and cycles are found from the rhythm of the motion only. Continue anyway?"))return;go("analyze")};
+
+/* ===== Analyse every frame ===== */
+const AN={cancel:false};
+VIEWS.analyze=()=>`<div><div class="eyebrow">${esc(nsTitle())}</div><h1>Analysing hands</h1><p class="lead">The app goes through the video frame by frame and tracks 21 points on each hand.</p></div>
+  <section class="panel flush"><div class="vstage" id="ast"><video id="av" playsinline muted preload="auto"></video><canvas id="ac"></canvas></div>
+  <div class="pad"><div class="bar big"><i id="aBar" style="width:0%"></i></div><div class="row between"><span class="num note" id="aPct">0%</span><span class="note" id="aInfo">Starting…</span></div></div></section>
+  <button class="btn" data-act="anCancel">Cancel</button>`;
+ACT.anCancel=()=>{AN.cancel=true;go("zones")};
+MOUNTS.analyze=async()=>{AN.cancel=false;keepAwake();const v=$("#av"),c=$("#ac");
+  try{await Hands.load()}catch(e){toast("Couldn't start hand tracking: "+(e.message||e));return}
+  await new Promise((res,rej)=>{v.addEventListener("loadedmetadata",res,{once:true});v.addEventListener("error",()=>rej(new Error("the video can't be opened")),{once:true});v.src=A.url}).catch(e=>{toast("Analysis failed: "+e.message)});
+  if(AN.cancel||S.view!=="analyze")return;await fixDuration(v);A.dur=v.duration*1000;A.ar=v.videoWidth/v.videoHeight;c.width=v.videoWidth;c.height=v.videoHeight;$("#ast").style.aspectRatio=v.videoWidth+"/"+v.videoHeight;
+  const frames=[];let prev={a:null,b:null};const x=c.getContext("2d");const t0=performance.now();let n=0;
+  const handle=t=>{const hs=Hands.detect(v);const o=assignHands(prev,hs);prev={a:o.a?{x:o.a[0],y:o.a[1]}:prev.a,b:o.b?{x:o.b[0],y:o.b[1]}:prev.b};frames.push({t:Math.round(t),a:o.a,b:o.b});n++;
+    if(n%3===0){x.clearRect(0,0,c.width,c.height);drawZones(x,c.width,c.height,A.zones,.1);drawHand(x,o.a,c.width,c.height,HCOL.a,Math.max(3,c.width/250));drawHand(x,o.b,c.width,c.height,HCOL.b,Math.max(3,c.width/250));
+      const p=Math.min(1,t/A.dur);$("#aBar").style.width=(p*100).toFixed(1)+"%";$("#aPct").textContent=Math.round(p*100)+"%";const el=(performance.now()-t0)/1000;$("#aInfo").textContent=p>0.03?"About "+Math.max(1,Math.round(el/p-el))+" s left · "+frames.filter(f=>f.a||f.b).length+" frames with hands":"Tracking…"}};
+  let rate=+pref("rate","0.5");v.playbackRate=rate;
+  if("requestVideoFrameCallback" in HTMLVideoElement.prototype){let lastPF=-1,lastT=-1;
+    await new Promise(res=>{const cb=(now,meta)=>{if(AN.cancel||S.view!=="analyze"){res();return}const t=meta.mediaTime*1000;
+        if(t>lastT){handle(t);lastT=t;if(lastPF>=0&&meta.presentedFrames-lastPF>2&&rate>0.15){rate=Math.max(0.15,rate*0.85);v.playbackRate=rate}lastPF=meta.presentedFrames}
+        if(v.ended||t>=A.dur-1){res();return}v.requestVideoFrameCallback(cb)};
+      v.requestVideoFrameCallback(cb);v.addEventListener("ended",()=>setTimeout(res,300),{once:true});v.play().catch(e=>{toast("Couldn't play the video: "+(e.message||e));res()})})}
+  else{const step=1000/20;for(let t=0;t<A.dur&&!AN.cancel&&S.view==="analyze";t+=step){await new Promise(r=>{v.addEventListener("seeked",r,{once:true});v.currentTime=t/1000});handle(t)}}
+  try{v.pause()}catch(e){}
+  if(AN.cancel||S.view!=="analyze")return;
+  const seen=frames.filter(f=>f.a||f.b).length;if(seen<15){toast("Hardly any hands were found. Check the camera view and light, then try again.");go("zones");return}
+  A.frames=frames;A.fps=frames.length/(A.dur/1000);reanalyse();go("review")};
+function reanalyse(keepCuts){const r=analyzeHands(A.frames,A.ar,A.zones);A.la=r.la.join("");A.lb=r.lb.join("");A.rg=r.rg;if(!keepCuts){A.cuts=r.cycles.cuts.slice();A.method=r.cycles.method;A.skip=[]}}
+const curCycles=()=>{const c=[];for(let i=0;i+1<A.cuts.length;i++){const s=A.cuts[i],e=A.cuts[i+1];if(!A.skip.includes(Math.round(s)))c.push({s,e})}return c};
+const draftStudy=()=>({frames:A.frames,la:A.la,lb:A.lb,rg:A.rg,cycles:curCycles(),rating:A.rating,allow:A.allow});
+
+/* ===== Review: replay, motions per hand, cycles ===== */
+VIEWS.review=()=>{const st=studyStats(draftStudy());const ed=A.edit;
+  return`<div class="row"><button class="link" data-act="rvBack">← ${ed?"Back without saving":"Zones"}</button></div>
+  <div><div class="eyebrow">${esc(ed?[ed.opName,ed.operator].filter(Boolean).join(" · "):nsTitle())}</div><h1>Check the cycles</h1>
+  <p class="lead">${A.cuts.length>1?`The app found <b>${Math.max(0,A.cuts.length-1)}</b> cycles (${A.method==="stack"?"each time a piece goes to the finished stack":A.method==="bin"?"each pick-up from the bin":"from the rhythm of the motion"}). Play through and fix any cut that is wrong.`:"No repeating cycle was found. Play the video and set a cut at the same moment of each cycle (e.g. when the piece goes on the stack)."}</p></div>
+  <section class="panel flush pinv">${A.url?vplayerHtml("rvP","rvCap"):cplayerHtml("rvP","rvCap")}</section>
+  <section class="panel"><div class="lanes" id="lanes">${lanesHtml()}</div>
+   <div class="legend">${MORDER.split("").filter(k=>k!=="U").map(k=>`<span><i style="--c:${MOT[k].c};height:10px"></i>${MOT[k].l}</span>`).join("")}</div>
+   <div class="row"><button class="btn sm" data-act="cutAdd" data-keep>${ic("cut")}Cut here</button><button class="btn sm" data-act="cutDel" data-keep>Remove nearest cut</button><button class="btn sm" data-act="cutAuto">Find cycles again</button></div></section>
+  <section class="panel"><h2>Cycles</h2><div class="tbl-wrap"><table><thead><tr><th>#</th><th class="r">Start</th><th class="r">Time</th><th class="r">Sewing</th><th></th></tr></thead><tbody id="cycT">${cycRows()}</tbody></table></div>
+   <p class="note">Leave out a cycle that was interrupted (thread break, talking, re-work) so it does not distort the time.</p></section>
+  <section class="panel" id="rvSum">${sumHtml(st)}</section>
+  <section class="panel"><div class="grid"><div class="field"><label class="lbl" for="rvRat">Performance rating %</label><input type="number" id="rvRat" value="${A.rating}" min="50" max="150" data-input="rvNum" data-k="rating"></div>
+   <div class="field"><label class="lbl" for="rvAll">Allowance % (personal, fatigue, delay)</label><input type="number" id="rvAll" value="${A.allow}" min="0" max="60" data-input="rvNum" data-k="allow"></div></div>
+   ${ed?"":`<label class="check"><input type="checkbox" id="rvKeep" data-change="rvKeep"${A.keep?" checked":""}> Keep the video with the study (${(A.blob.size/1048576).toFixed(1)} MB) for replay</label>`}
+   <button class="btn primary big" data-act="rvSave">${ic("check")}Save study</button></section>`};
+function sumHtml(st){return`<div class="stats"><div class="stat"><b class="num">${st.n?st.ct.toFixed(1):"—"}</b><span>avg cycle time (s), ${st.n} cycles</span></div><div class="stat"><b class="num">${st.n?st.smv.toFixed(3):"—"}</b><span>standard minutes (SMV)</span></div>
+  <div class="stat"><b class="num">${st.n?Math.round(st.perHour):"—"}</b><span>pieces / hour</span></div><div class="stat"><b class="num">${st.n?pct(st.vaPct):"—"}</b><span>sewing (value added)</span></div></div>`}
+function cycRows(){const cs=[];for(let i=0;i+1<A.cuts.length;i++){const s=A.cuts[i],e=A.cuts[i+1];const sk=A.skip.includes(Math.round(s));let va=0,tot=0;const F=A.frames;
+    for(let k=0;k<F.length;k++){if(F[k].t<s||F[k].t>=e)continue;const d=((F[k+1]||F[k]).t-(F[k-1]||F[k]).t)/2;tot+=d;if(A.la[k]==="S"||A.lb[k]==="S")va+=d}
+    cs.push(`<tr class="${sk?"skip":""}"><td class="num">${i+1}</td><td class="r num"><button class="link" data-act="cycGo" data-t="${s}">${fmtClock(s)}</button></td><td class="r num">${((e-s)/1000).toFixed(1)} s</td><td class="r num">${tot?pct(va/tot):""}</td><td><button class="btn sm ghost" data-act="cycSkip" data-t="${Math.round(s)}">${sk?"Use again":"Leave out"}</button></td></tr>`)}
+  return cs.join("")||`<tr><td colspan="5" class="note">No cycles yet.</td></tr>`}
+function lanesHtml(){const F=A.frames,T=F.map(f=>f.t),dur=Math.max(A.dur,T[T.length-1]||1);const lane=(lab,name,cls)=>{const sg=segs(lab.split(""),T);
+    return`<div class="lane"><span class="ln">${name}</span><div class="lt ${cls}" data-dur="${dur}">${sg.map(g=>`<i style="left:${(g.s/dur*100).toFixed(3)}%;width:${Math.max(.15,(g.e-g.s)/dur*100).toFixed(3)}%;background:${MOT[g.c].c}" title="${MOT[g.c].l}"></i>`).join("")}<b class="ph"></b></div></div>`};
+  const cyc=[];for(let i=0;i+1<A.cuts.length;i++){const s=A.cuts[i],e=A.cuts[i+1],sk=A.skip.includes(Math.round(s));cyc.push(`<i class="cy${sk?" sk":""}${i%2?" alt":""}" style="left:${(s/dur*100).toFixed(3)}%;width:${((e-s)/dur*100).toFixed(3)}%">${i+1}</i>`)}
+  return lane(A.la,"Right","")+lane(A.lb,"Left","")+`<div class="lane"><span class="ln">Cycles</span><div class="lt cyl" data-dur="${dur}">${cyc.join("")}${A.cuts.map(t=>`<em style="left:${(t/dur*100).toFixed(3)}%"></em>`).join("")}<b class="ph"></b></div></div>`}
+function refreshReview(){const l=$("#lanes");if(l){l.innerHTML=lanesHtml();bindLanes()}const c=$("#cycT");if(c)c.innerHTML=cycRows();const s=$("#rvSum");if(s)s.innerHTML=sumHtml(studyStats(draftStudy()));if(player)rvTime(player.t)}
+function bindLanes(){document.querySelectorAll("#lanes .lt").forEach(el=>el.addEventListener("click",e=>{const r=el.getBoundingClientRect();if(!player)return;player.pause();player.seek(clamp((e.clientX-r.left)/r.width,0,1)*+el.dataset.dur)}))}
+function rvTime(t){const dur=+($("#lanes .lt")||{dataset:{dur:1}}).dataset.dur;document.querySelectorAll("#lanes .ph").forEach(p=>p.style.left=clamp(t/dur*100,0,100)+"%");
+  const i=nearestFrame(A.frames,t);const cap=$("#rvCap");if(cap&&i>=0)cap.textContent=`Right: ${MOT[A.la[i]].l} · Left: ${MOT[A.lb[i]].l}`}
+function rvOverlay(cv,t){const i=nearestFrame(A.frames,t);const x=cv.getContext("2d");drawZones(x,cv.width,cv.height,A.zones,.08);if(i<0)return;const f=A.frames[i];const lw=Math.max(3,cv.width/250);drawHand(x,f.a,cv.width,cv.height,HCOL.a,lw);drawHand(x,f.b,cv.width,cv.height,HCOL.b,lw)}
+MOUNTS.review=()=>{const dur=Math.max(A.dur,A.frames[A.frames.length-1].t);
+  player=A.url?new VPlayer($("#rvP"),dur,A.url,0,rvTime,rvOverlay):new CPlayer($("#rvP"),dur,A.ar,(cv,t)=>{const x=cv.getContext("2d");x.fillStyle="#0f1716";x.fillRect(0,0,cv.width,cv.height);rvOverlay(cv,t)},rvTime);
+  bindLanes();player.seek(A.cuts[0]||0)};
+ACT.rvBack=()=>{if(A.edit){S.study=A.edit;go("study")}else go("zones")};
+ACT.cutAdd=()=>{if(!player)return;player.pause();const t=Math.round(player.t);if(A.cuts.some(c=>Math.abs(c-t)<300))return toast("There is already a cut here.");A.cuts.push(t);A.cuts.sort((a,b)=>a-b);refreshReview();toast("Cut added at "+fmtClock(t))};
+ACT.cutDel=()=>{if(!player||!A.cuts.length)return;player.pause();const t=player.t;let k=0;A.cuts.forEach((c,i)=>{if(Math.abs(c-t)<Math.abs(A.cuts[k]-t))k=i});const c=A.cuts[k];A.cuts.splice(k,1);refreshReview();toast("Cut at "+fmtClock(c)+" removed")};
+ACT.cutAuto=()=>{reanalyse();refreshReview();toast(Math.max(0,A.cuts.length-1)+" cycles found")};
+ACT.cycGo=d=>{if(!player)return;player.pause();player.seek(+d.t);window.scrollTo({top:0,behavior:"smooth"})};
+ACT.cycSkip=d=>{const t=+d.t;A.skip=A.skip.includes(t)?A.skip.filter(x=>x!==t):A.skip.concat(t);refreshReview()};
+ACT.rvNum=(d,el)=>{A[d.k]=+el.value||0;const s=$("#rvSum");if(s)s.innerHTML=sumHtml(studyStats(draftStudy()))};
+ACT.rvKeep=(d,el)=>{A.keep=el.checked};
+ACT.rvSave=async()=>{const cyc=curCycles();if(!cyc.length&&!confirm("There are no cycles, so no cycle time can be calculated. Save anyway?"))return;
+  const ed=A.edit,l=ed?lineOf(ed.lineId):lineOf(NS.lineId),o=ed?null:opOf(l,NS.opId);
+  const m=ed?{...ed}:{id:uid(),lineId:l?l.id:"",opId:o?o.id:"",opName:o?o.name:NS.opName.trim(),opNo:o?o.no:"",smvRef:o?+o.smv||0:0,lineName:l?l.name:"",operator:NS.operator.trim(),empId:NS.empId.trim(),device:deviceName(),by:S.user.name,created:Date.now(),
+    dur:Math.round(A.dur),ar:A.ar,fps:+A.fps.toFixed(1),zones:A.zones,method:A.method};
+  Object.assign(m,{cycles:cyc,cuts:A.cuts.slice(),skip:A.skip.slice(),rating:A.rating,allow:A.allow});
+  m.stats=studyStats({...draftStudy(),cycles:cyc});delete m.stats.durs;m.durs=studyStats(draftStudy()).durs;
+  const data={id:m.id,frames:A.frames,la:A.la,lb:A.lb,rg:A.rg};
+  if(!ed&&A.keep&&A.blob){try{m.video=await storeVideo(m.id,(m.opName||"study")+"_"+(m.operator||""),A.blob,A.mime,0)}catch(e){toast("Couldn't keep the video ("+(e.message||e)+"). The study is saved without it.")}}
+  try{await DB.putStudy(m,data)}catch(e){return toast("Couldn't save the study: "+(e.message||e))}
+  S.study=m;toast("Study saved");go("study")};
+
+/* canvas-only player for studies whose video was not kept */
+class CPlayer{constructor(root,dur,ar,draw,onTime){this.root=root;this.dur=dur;this.draw=draw;this.onTime=onTime;this.t=0;this.playing=false;this.cv=root.querySelector("canvas");this.cv.width=960;this.cv.height=Math.round(960/ar);
+    this.rng=root.querySelector("input[type=range]");this.btn=root.querySelector("[data-pl=play]");this.tm=root.querySelector(".time");this.rng.max=dur;this.rng.addEventListener("input",()=>{this.pause();this.seek(+this.rng.value)});this.btn.addEventListener("click",()=>this.playing?this.pause():this.play())}
+  seek(t){this.t=clamp(t,0,this.dur);this.rng.value=this.t;this.tm.textContent=fmtClock(this.t)+" / "+fmtClock(this.dur);this.draw(this.cv,this.t);if(this.onTime)this.onTime(this.t)}
+  play(){if(this.t>=this.dur-40)this.t=0;this.playing=true;this.btn.textContent="Pause";let last=performance.now();const st=()=>{if(!this.playing)return;const n=performance.now();this.t+=n-last;last=n;if(this.t>=this.dur){this.t=this.dur;this.pause()}this.seek(this.t);if(this.playing)this.raf=requestAnimationFrame(st)};this.raf=requestAnimationFrame(st)}
+  pause(){this.playing=false;cancelAnimationFrame(this.raf);this.btn.textContent="Play"}stop(){this.pause()}}
+const cplayerHtml=(id,cap)=>`<div class="player" id="${id}"><div class="vstage"><canvas class="solo"></canvas>${cap?`<div class="vcap" id="${cap}"></div>`:""}</div><div class="pctl"><button class="btn sm" data-pl="play" style="min-width:76px">Play</button><input type="range" min="0" step="10" value="0" aria-label="Position"><span class="time">00:00.0</span></div></div>`;
+/* ===== Study report ===== */
+VIEWS.study=()=>{const m=S.study;if(!m)return VIEWS.studies();const st=m.stats||{n:0};const l=lineOf(m.lineId),o=opOf(l,m.opId);const ref=o?+o.smv||0:m.smvRef||0;const fd=findings({...st,hands:handNames()});
+  const diff=ref&&st.n?(st.smv-ref)/ref:null;
+  return`<div class="row"><button class="link" data-act="${l?"stLine":"go"}" data-v="studies">← ${l?esc(l.name):"All studies"}</button></div>
+  <div class="sthead"><div class="eyebrow">${esc([m.opNo!==""&&m.opNo!=null?"Op "+m.opNo:"",l?l.name:m.lineName].filter(Boolean).join(" · ")||"Time study")}</div><h1>${esc(m.opName||"Study")}</h1>
+   <p class="lead">${esc(m.operator||"Operator")}${m.empId?" ("+esc(m.empId)+")":""} · ${fmtDate(m.created)} · by ${esc(m.by||"")}${m.device?" on "+esc(m.device):""}</p></div>
+  <div class="stats"><div class="stat"><b class="num">${st.n?st.ct.toFixed(1):"—"}</b><span>avg cycle time (s) · ${st.n} cycles</span></div>
+   <div class="stat"><b class="num">${st.n?st.smv.toFixed(3):"—"}</b><span>SMV, rating ${m.rating}% + ${m.allow}% allowance${ref?` · bulletin ${ref.toFixed(3)}`:""}</span></div>
+   <div class="stat${diff!=null&&diff>0.1?" bad":diff!=null&&diff<-0.1?" good":""}"><b class="num">${diff==null?"—":(diff>0?"+":"")+Math.round(diff*100)+"%"}</b><span>vs bulletin SMV</span></div>
+   <div class="stat"><b class="num">${st.n?Math.round(st.perHour):"—"}</b><span>pieces / hour (standard)</span></div>
+   <div class="stat"><b class="num">${st.n?pct(st.vaPct):"—"}</b><span>sewing = value added</span></div><div class="stat"><b class="num">${st.n?pct(st.cv):"—"}</b><span>cycle variation (CV)</span></div></div>
+  ${fd.length?`<section class="panel"><h2>Improvement points</h2><div class="imp">${fd.map(f=>`<div class="imp-item" style="--c:${f.sev==="high"?"var(--miss)":f.sev==="mid"?"var(--slow)":f.sev==="low"?"var(--fast)":"var(--muted)"}"><span class="sev"></span><span class="t">${esc(f.title)}</span><span class="lost">${f.lost>0.05?"≈"+f.lost.toFixed(1)+" s":""}</span><span class="d">${esc(f.detail)}</span></div>`).join("")}</div>
+   <p class="note">≈ s = estimated time that could be saved per cycle.</p></section>`:""}
+  ${st.n?`<section class="panel"><h2>Hand motions per cycle</h2>${motionBars(st)}${motionTable(st)}</section>`:""}
+  ${m.durs&&m.durs.length?`<section class="panel"><h2>Cycle times</h2>${cycleChart(m.durs,st.ct)}</section>`:""}
+  <div class="row"><button class="btn sm primary" data-act="studyEdit">${ic("play")}Replay &amp; edit cycles</button><button class="btn sm" data-act="studyPdf">${ic("pdf")}Report PDF</button><button class="btn sm" data-act="studyXls">${ic("xls")}Excel</button>
+   ${m.video&&NATIVE?`<button class="btn sm" data-act="stGallery">${m.video.gallery?"In Gallery ✓":"Copy video to Gallery"}</button>`:""}${m.video&&can("delete")?`<button class="btn sm" data-act="stDelVideo">Delete video</button>`:""}${can("delete")?`<button class="btn sm danger" data-act="stDel">${ic("trash")}Delete study</button>`:""}</div>
+  ${!l&&S.lines.length&&can("edit")?`<section class="panel"><h2>Link to a line</h2><div class="row"><select id="stLnk" style="flex:1">${S.lines.map(x=>`<optgroup label="${esc(x.name)}">${(x.ops||[]).map(op=>`<option value="${esc(x.id)}|${esc(op.id)}">${esc(op.no??"")} ${esc(op.name)}</option>`).join("")}</optgroup>`).join("")}</select><button class="btn sm" data-act="stLink">Link</button></div></section>`:""}`};
+function motionBars(st){const H=st.hands;return`<div class="mbars">${["a","b"].map(k=>{const m=st.mot[k];const tot=MORDER.split("").reduce((a,c)=>a+(m[c]||0),0)||1;
+  return`<div class="mbar"><span class="ln">${H[k]}</span><div class="mb">${MORDER.split("").filter(c=>(m[c]||0)/tot>0.004).map(c=>`<i style="width:${(m[c]/tot*100).toFixed(2)}%;background:${MOT[c].c}" title="${MOT[c].l} ${m[c].toFixed(1)} s">${m[c]/tot>0.09?MOT[c].l.split(" ")[0]:""}</i>`).join("")}</div></div>`}).join("")}</div>`}
+function motionTable(st){const H=st.hands;return`<div class="tbl-wrap"><table><thead><tr><th>Motion</th><th class="r">${H.a}</th><th class="r">${H.b}</th><th class="r">% of cycle</th></tr></thead><tbody>
+  ${MORDER.split("").filter(c=>(st.mot.a[c]||0)+(st.mot.b[c]||0)>0.05).map(c=>`<tr><td><span class="st" style="--c:${MOT[c].c}">${MOT[c].l}</span></td><td class="r num">${(st.mot.a[c]||0).toFixed(2)} s</td><td class="r num">${(st.mot.b[c]||0).toFixed(2)} s</td><td class="r num">${pct(((st.mot.a[c]||0)+(st.mot.b[c]||0))/2/st.ct)}</td></tr>`).join("")}
+  <tr><td><b>Cycle</b></td><td class="r num"><b>${st.ct.toFixed(2)} s</b></td><td class="r num"><b>${st.ct.toFixed(2)} s</b></td><td class="r num">100%</td></tr></tbody></table></div>
+  <p class="note">Sewing / use is value added. Reach, grasp, move, position, release and hold are needed but add no value; idle is waiting.</p>`}
+function cycleChart(durs,avg){const mx=Math.max(...durs)*1.1;return`<div class="cchart">${durs.map((d,i)=>`<div class="cc"><i style="height:${(d/mx*100).toFixed(1)}%" class="${d>avg*1.15?"hi":""}"></i><span class="num">${i+1}</span></div>`).join("")}<b class="avg" style="bottom:${(avg/mx*100).toFixed(1)}%"><span>avg ${avg.toFixed(1)} s</span></b></div>`}
+ACT.stLine=()=>{S.line=lineOf(S.study.lineId);S.ltab="lstudies";go("line")};
+ACT.stLink=async()=>{const[lid,oid]=$("#stLnk").value.split("|");const l=lineOf(lid),o=opOf(l,oid);if(!o)return;Object.assign(S.study,{lineId:lid,opId:oid,lineName:l.name,opNo:o.no,smvRef:+o.smv||0});await DB.putStudy(S.study);toast("Linked to "+l.name);render()};
+ACT.studyEdit=async()=>{const m=S.study;const d=await DB.data(m.id);if(!d)return toast("The motion data of this study is missing.");
+  A.url=null;A.own=false;if(m.video){A.url=await videoSrc(m.video)}
+  Object.assign(A,{blob:null,frames:d.frames,la:d.la,lb:d.lb,rg:d.rg,zones:m.zones||[],ar:m.ar||16/9,dur:m.dur||d.frames[d.frames.length-1].t,fps:m.fps,cuts:(m.cuts||[]).slice(),skip:(m.skip||[]).slice(),method:m.method,rating:m.rating,allow:m.allow,edit:m,keep:false});
+  if(!A.cuts.length&&m.cycles&&m.cycles.length)A.cuts=[m.cycles[0].s,...m.cycles.map(c=>c.e)];go("review")};
+ACT.stDel=async()=>{if(!confirm("Delete this study and its video?"))return;await DB.delStudy(S.study);toast("Study deleted");go("studies")};
+ACT.stDelVideo=async()=>{if(!confirm("Delete the video of this study? The results and hand data stay."))return;await deleteVideoFile(S.study.video);delete S.study.video;await DB.putStudy(S.study);render()};
+ACT.stGallery=async()=>{const m=S.study;if(m.video.gallery)return toast("Already in the Gallery: "+m.video.gallery.split("/").join(" › "));try{const src=await videoSrc(m.video);const blob=await(await fetch(src)).blob();const b=$("#busy");b.hidden=false;
+    const g="Movies/LineStudy/"+safeName(m.opName+"_"+(m.operator||""))+"_"+new Date(m.created).toISOString().slice(0,10)+"_"+m.id.slice(-4)+"."+(m.video.ext||"mp4");
+    await writeBlob(blob,g,"EXTERNAL_STORAGE",p=>{b.textContent="Copying to Gallery… "+Math.round(p*100)+"%"});b.hidden=true;m.video.gallery=g;await DB.putStudy(m);toast("Copied to the Gallery");render()}
+  catch(e){$("#busy").hidden=true;toast("Couldn't copy: "+(e.message||e))}};
+
+/* ===== All studies ===== */
+let STF="";
+VIEWS.studies=()=>{const list=S.studies.filter(s=>!STF||s.lineId===STF);
+  return`<div class="row"><button class="link" data-act="home">← Home</button></div><div><h1>All studies</h1></div>
+  <div class="row"><select data-change="stFilter" style="flex:1"><option value="">All lines</option>${S.lines.map(l=>`<option value="${esc(l.id)}"${STF===l.id?" selected":""}>${esc(l.name)}</option>`).join("")}<option value="none"${STF==="none"?" selected":""}>Not in a line</option></select>
+   <button class="btn sm" data-act="importPick">${ic("merge")}Combine phones</button><input type="file" id="importFile" accept=".json,application/json,*/*" data-change="importFile" hidden></div>
+  <section class="panel">${(STF==="none"?S.studies.filter(s=>!lineOf(s.lineId)):list).length?`<div class="list">${(STF==="none"?S.studies.filter(s=>!lineOf(s.lineId)):list).map(studyItem).join("")}</div>`:`<p class="note">No studies yet.</p>`}</section>`};
+ACT.stFilter=(d,el)=>{STF=el.value;render()};
+
+/* ===== Settings ===== */
+VIEWS.settings=()=>`<div class="row"><button class="link" data-act="home">← Home</button></div><div><h1>Settings</h1></div>
+  <section class="panel"><h2>This phone</h2><div class="field"><label class="lbl" for="setDev">Phone name (shown on studies when phones are combined)</label><input type="text" id="setDev" value="${esc(pref("device",""))}" placeholder="e.g. IE phone 2" data-input="setPref" data-k="device"></div></section>
+  <section class="panel"><h2>Defaults</h2><div class="grid"><div class="field"><label class="lbl" for="setAll">Allowance %</label><input type="number" id="setAll" value="${esc(pref("allow","15"))}" data-input="setPref" data-k="allow"></div>
+   <div class="field"><label class="lbl" for="setRate">Analysis detail</label><select id="setRate" data-change="setPref" data-k="rate"><option value="0.5"${pref("rate","0.5")==="0.5"?" selected":""}>Normal (about 2× video length)</option><option value="0.3"${pref("rate","0.5")==="0.3"?" selected":""}>Fine (about 3×, catches very fast finger moves)</option></select></div></div></section>
+  <section class="panel"><h2>Backup &amp; combining phones</h2><p class="note">Back up everything (lines, studies, hand data, users) to Google Drive: tap Back up and choose Drive. Videos are not included. To combine work from several phones, share a line from each phone (Line › Share with other phones) and import the files here.</p>
+   <div class="row">${can("edit")?`<button class="btn sm primary" data-act="backup">${ic("cloud")}Back up to Google Drive</button>`:""}<button class="btn sm" data-act="importPick">${ic("merge")}Import / restore a file</button><input type="file" id="importFile" accept=".json,application/json,*/*" data-change="importFile" hidden></div></section>`;
+ACT.setPref=(d,el)=>setPref(d.k,el.value);
+
+/* ===== Share, back up, combine ===== */
+async function packStudies(list){const out=[];for(const m of list){const d=await DB.data(m.id);const{video,...meta}=m;out.push({meta,data:d})}return out}
+ACT.sharePack=async()=>{const l=S.line;const b=$("#busy");b.textContent="Preparing…";b.hidden=false;try{const pk={type:"line-pack",version:1,device:deviceName(),exported:Date.now(),by:S.user.name,line:l,studies:await packStudies(studiesOf(l.id))};
+    b.hidden=true;await download("LineStudy-"+safeName(l.name)+"-"+safeName(deviceName())+"-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(pk),"application/json")}catch(e){b.hidden=true;toast("Couldn't prepare the file: "+(e.message||e))}};
+ACT.backup=async()=>{const b=$("#busy");b.textContent="Preparing backup…";b.hidden=false;try{const pk={type:"linestudy-backup",version:1,device:deviceName(),exported:Date.now(),lines:S.lines,studies:await packStudies(S.studies),users:Users.list};
+    b.hidden=true;await download("LineStudy-backup-"+new Date().toISOString().slice(0,10)+".json",JSON.stringify(pk),"application/json");setPref("lastBackup",String(Date.now()));if(S.view==="home")render()}catch(e){b.hidden=true;toast("Backup failed: "+(e.message||e))}};
+ACT.importPick=()=>{const f=$("#importFile");if(f)f.click()};
+ACT.importFile=async(d,el)=>{const f=el.files&&el.files[0];el.value="";if(!f)return;const b=$("#busy");b.textContent="Combining…";b.hidden=false;
+  try{const j=JSON.parse(await f.text());const r=await mergePack(j);b.hidden=true;toast(r);await DB.load();render()}catch(e){b.hidden=true;toast("That file isn't a Line Study file ("+(e.message||e)+")")}};
+async function mergePack(j){if(!j||(j.type!=="line-pack"&&j.type!=="linestudy-backup"))throw new Error("unknown type");
+  const lines=j.type==="line-pack"?[j.line]:j.lines||[];const map={},opMap={};let nl=0,no=0,ns=0,nu=0;
+  for(const L of lines){if(!L||!L.id)continue;let loc=lineOf(L.id)||S.lines.find(x=>x.name.trim().toLowerCase()===String(L.name||"").trim().toLowerCase()&&String(x.style||"").trim().toLowerCase()===String(L.style||"").trim().toLowerCase());
+    if(!loc){loc=JSON.parse(JSON.stringify(L));await DB.putLine(loc);nl++;for(const o of loc.ops||[])opMap[L.id+"|"+o.id]=o.id}
+    else{const ops=loc.ops||(loc.ops=[]);let ch=false;for(const o of L.ops||[]){let m=ops.find(x=>x.id===o.id)||ops.find(x=>String(x.no)===String(o.no)&&x.name.trim().toLowerCase()===o.name.trim().toLowerCase())||ops.find(x=>x.name.trim().toLowerCase()===o.name.trim().toLowerCase());
+        if(!m){m={...o};ops.push(m);no++;ch=true}opMap[L.id+"|"+o.id]=m.id}if(ch||(L.updated||0)>(loc.updated||0)&&!["target"].every(k=>loc[k]===L[k])){if(!loc.target&&L.target)loc.target=L.target;await DB.putLine(loc)}}
+    map[L.id]=loc.id}
+  for(const p of j.studies||[]){const m=p&&p.meta;if(!m||!m.id)continue;const ex=S.studies.find(x=>x.id===m.id);if(ex&&(ex.updated||0)>=(m.updated||0))continue;
+    const meta={...m};if(map[m.lineId]){meta.opId=opMap[m.lineId+"|"+m.opId]||meta.opId;meta.lineId=map[m.lineId]}if(ex&&ex.video)meta.video=ex.video;await DB.putStudy(meta,p.data);ns++}
+  if(j.type==="linestudy-backup"&&Array.isArray(j.users)){for(const u of j.users)if(u&&u.uid&&u.hash&&!Users.find(u.uid)){Users.list.push(u);nu++}if(nu)await Users.save()}
+  return[nl&&nl+" line"+(nl>1?"s":""),no&&no+" operation"+(no>1?"s":""),ns+" stud"+(ns===1?"y":"ies"),nu&&nu+" user"+(nu>1?"s":"")].filter(Boolean).join(", ")+" added"+(j.device?" from "+j.device:"")}
+
+/* ===== PDF + Excel ===== */
+async function pdfFrom(pages,name,landscape){const b=$("#busy");b.textContent="Making PDF…";b.hidden=false;
+  try{await loadLib("jspdf");await loadLib("html2canvas");const W=landscape?1123:794,H=landscape?794:1123;const host=document.createElement("div");host.style.cssText="position:fixed;left:-20000px;top:0";document.body.appendChild(host);
+    const pdf=new jspdf.jsPDF({orientation:landscape?"l":"p",unit:"pt",format:"a4"});const pw=pdf.internal.pageSize.getWidth(),ph=pdf.internal.pageSize.getHeight();
+    for(let i=0;i<pages.length;i++){host.innerHTML=`<div class="pdfpage" style="width:${W}px;height:${H}px">${pages[i]}<div class="pfoot">Line Study · ${esc(name)} · page ${i+1} of ${pages.length}</div></div>`;
+      const cv=await html2canvas(host.firstChild,{scale:2,backgroundColor:"#ffffff",logging:false});if(i)pdf.addPage();pdf.addImage(cv.toDataURL("image/jpeg",0.9),"JPEG",0,0,pw,ph)}
+    host.remove();const b64=pdf.output("datauristring").split(",")[1];b.hidden=true;await shareBinary(name+".pdf",b64,"application/pdf")}catch(e){b.hidden=true;toast("Couldn't make the PDF: "+(e.message||e))}}
+ACT.studyPdf=()=>{const m=S.study,st=m.stats;const l=lineOf(m.lineId),o=opOf(l,m.opId);const ref=o?+o.smv||0:m.smvRef||0;const fd=findings({...st,hands:handNames()});
+  const p=`<div class="ph1"><div><div class="pe">Time study · hand motion analysis</div><h1>${esc(m.opName||"Study")}</h1></div><div class="pmeta">${[["Line",l?l.name:m.lineName],["Operator",(m.operator||"")+(m.empId?" ("+m.empId+")":"")],["Date",fmtDate(m.created)],["Studied by",m.by],["Phone",m.device]].filter(x=>x[1]).map(x=>`<span><b>${esc(x[0])}</b> ${esc(x[1])}</span>`).join("")}</div></div>
+   <div class="pstats">${[["Avg cycle",st.ct.toFixed(1)+" s"],["Cycles",st.n],["SMV",st.smv.toFixed(3)],["Bulletin SMV",ref?ref.toFixed(3):"—"],["Pieces / hour",Math.round(st.perHour)],["Value added",pct(st.vaPct)],["Variation (CV)",pct(st.cv)],["Rating / allowance",m.rating+"% / "+m.allow+"%"]].map(x=>`<div><b>${x[1]}</b><span>${x[0]}</span></div>`).join("")}</div>
+   <h2>Hand motions per cycle</h2>${motionBars(st)}${motionTable(st)}
+   ${fd.length?`<h2>Improvement points</h2><ol class="pfind">${fd.map(f=>`<li><b>${esc(f.title)}</b>${f.lost>0.05?` <i>≈ ${f.lost.toFixed(1)} s per cycle</i>`:""}<br>${esc(f.detail)}</li>`).join("")}</ol>`:""}
+   ${m.durs&&m.durs.length?`<h2>Cycle times</h2>${cycleChart(m.durs,st.ct)}`:""}`;
+  pdfFrom([p],"Study-"+safeName(m.opName)+"-"+safeName(m.operator||""),false)};
+ACT.linePdf=()=>{const l=S.line,c=lineCalc(l,studiesOf(l.id));
+  const head=`<div class="ph1"><div><div class="pe">Line balance report</div><h1>${esc(l.name)}</h1></div><div class="pmeta">${[["Unit",l.unit],["Buyer",l.buyer],["Style",l.style],["Order",l.order],["Date",fmtDate(Date.now())]].filter(x=>x[1]).map(x=>`<span><b>${x[0]}</b> ${esc(x[1])}</span>`).join("")}</div></div>
+   <div class="pstats">${[["Target / hour",c.target||"—"],["Takt time",c.takt?c.takt.toFixed(1)+" s":"—"],["Output / hour",c.out?Math.round(c.out):"—"],["Balance ratio",c.lbr?pct(c.lbr):"—"],["Efficiency",c.eff?pct(c.eff):"—"],["Operators",c.mp],["Total SMV",c.totSmv.toFixed(2)],["Studied",c.measured+" / "+(l.ops||[]).length]].map(x=>`<div><b>${x[1]}</b><span>${x[0]}</span></div>`).join("")}</div>`;
+  const tbl=rows=>`<table class="ptbl"><thead><tr><th>No</th><th>Operation</th><th>Machine</th><th>MP</th><th>SMV</th><th>Actual</th><th>Diff</th><th>Station s</th><th>Pcs/h</th><th>Need MP</th></tr></thead><tbody>${rows.map(x=>`<tr${x===c.bn?' class="bn"':""}><td>${esc(x.op.no??"")}</td><td>${esc(x.op.name)}</td><td>${esc(x.op.machine||"")}</td><td>${x.n}</td><td>${(+x.op.smv||0).toFixed(3)}</td><td>${x.act?(x.act/60).toFixed(3):"—"}</td><td>${x.diff==null?"":(x.diff>0?"+":"")+Math.round(x.diff*100)+"%"}</td><td>${x.ct?x.ct.toFixed(1):""}</td><td>${x.perHour?Math.round(x.perHour):""}</td><td>${x.need?x.need.toFixed(2):""}</td></tr>`).join("")}</tbody></table>`;
+  const pages=[head+`<h2>Line balance</h2>${balanceChart(c).replace('class="bal"','class="bal pbal"')}${c.bn?`<h2>What to do</h2><ul class="pfind">${balanceTips(c).map(t=>`<li>${t}</li>`).join("")}</ul>`:""}`];
+  const R=c.ops;for(let i=0;i<R.length;i+=26)pages.push(`<h2>Operations${i?" (continued)":""}</h2>`+tbl(R.slice(i,i+26)));
+  pdfFrom(pages,"LineBalance-"+safeName(l.name),false)};
+async function xlsOut(wb,name){const buf=await wb.xlsx.writeBuffer();await shareBinary(name+".xlsx",abToB64(buf),"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")}
+function xlsHead(ws,cols){ws.addRow(cols);const r=ws.lastRow;r.font={bold:true,color:{argb:"FFFFFFFF"}};r.eachCell(c=>{c.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FF0D7A71"}}})}
+function studyRows(ws,list){xlsHead(ws,["Date","Line","Op no","Operation","Operator","ID","Cycles","Avg cycle s","Min s","Max s","CV %","Rating %","Allowance %","Standard s","SMV","Bulletin SMV","Diff %","Pcs/hour","Value added %","Phone","By"]);
+  for(const m of list){const s=m.stats||{};const l=lineOf(m.lineId),o=opOf(l,m.opId);const ref=o?+o.smv||0:m.smvRef||0;
+    ws.addRow([new Date(m.created),l?l.name:m.lineName||"",m.opNo??"",m.opName,m.operator,m.empId,s.n,+(s.ct||0).toFixed(2),+(s.min||0).toFixed(2),+(s.max||0).toFixed(2),Math.round((s.cv||0)*100),m.rating,m.allow,+(s.std||0).toFixed(2),+(s.smv||0).toFixed(4),ref||"",ref&&s.n?Math.round((s.smv-ref)/ref*100):"",Math.round(s.perHour||0),Math.round((s.vaPct||0)*100),m.device,m.by])}
+  ws.getColumn(1).numFmt="yyyy-mm-dd hh:mm";ws.columns.forEach(c=>c.width=13);ws.getColumn(4).width=28}
+function motionRows(ws,list){xlsHead(ws,["Operation","Operator","Hand",...MORDER.split("").map(c=>MOT[c].l+" s")]);
+  for(const m of list){const s=m.stats;if(!s||!s.n)continue;const H=handNames();for(const k of["a","b"])ws.addRow([m.opName,m.operator,H[k],...MORDER.split("").map(c=>+(s.mot[k][c]||0).toFixed(2))])}ws.columns.forEach(c=>c.width=14);ws.getColumn(1).width=28}
+ACT.studyXls=async()=>{const m=S.study;try{await loadLib("exceljs");const wb=new ExcelJS.Workbook();studyRows(wb.addWorksheet("Summary"),[m]);motionRows(wb.addWorksheet("Hand motions"),[m]);
+  const ws=wb.addWorksheet("Cycles");xlsHead(ws,["Cycle","Start s","Time s"]);(m.cycles||[]).forEach((c,i)=>ws.addRow([i+1,+(c.s/1000).toFixed(2),+((c.e-c.s)/1000).toFixed(2)]));
+  const fw=wb.addWorksheet("Improvements");xlsHead(fw,["Point","Detail","Saving s per cycle"]);findings({...m.stats,hands:handNames()}).forEach(f=>fw.addRow([f.title,f.detail,+f.lost.toFixed(1)]));fw.getColumn(1).width=50;fw.getColumn(2).width=90;
+  await xlsOut(wb,"Study-"+safeName(m.opName)+"-"+safeName(m.operator||""))}catch(e){toast("Couldn't make the Excel file: "+(e.message||e))}};
+ACT.lineXls=async()=>{const l=S.line,ss=studiesOf(l.id),c=lineCalc(l,ss);try{await loadLib("exceljs");const wb=new ExcelJS.Workbook();const ws=wb.addWorksheet("Line balance");
+  ws.addRow(["Line",l.name,"Unit",l.unit||"","Buyer",l.buyer||"","Style",l.style||""]);ws.addRow(["Target / hour",c.target||"","Takt s",c.takt?+c.takt.toFixed(2):"","Output / hour",c.out?Math.round(c.out):"","Balance ratio %",Math.round(c.lbr*100),"Efficiency %",Math.round(c.eff*100)]);ws.addRow([]);
+  xlsHead(ws,["No","Operation","Machine","Manpower","Bulletin SMV","Actual SMV","Diff %","Station cycle s","Pcs / hour","Operators needed","Studies","Bottleneck"]);
+  for(const x of c.ops)ws.addRow([x.op.no??"",x.op.name,x.op.machine||"",x.n,+x.op.smv||0,x.act?+(x.act/60).toFixed(4):"",x.diff==null?"":Math.round(x.diff*100),x.ct?+x.ct.toFixed(2):"",x.perHour?Math.round(x.perHour):"",x.need?+x.need.toFixed(2):"",x.studies.length,x===c.bn?"YES":""]);
+  ws.columns.forEach(cl=>cl.width=13);ws.getColumn(2).width=32;studyRows(wb.addWorksheet("Studies"),ss);motionRows(wb.addWorksheet("Hand motions"),ss);
+  await xlsOut(wb,"LineBalance-"+safeName(l.name))}catch(e){toast("Couldn't make the Excel file: "+(e.message||e))}};
+
+/* ===== Users, login, back button ===== */
+VIEWS.login=vLogin;VIEWS.request=vRequest;VIEWS.users=vUsers;VIEWS.password=vPassword;
+function backTarget(){const v=S.view;return{line:"lines",lineEdit:LE.isNew?"lines":"line",bulletin:BI.from==="edit"?"lineEdit":"line",setup:"home",record:"setup",zones:A.fromFile?"setup":"record",analyze:"zones",review:A.edit?"study":"zones",
+  study:"studies",lines:"home",studies:"home",settings:"home",users:"home",password:"home",request:"login"}[v]||null}
+function onBack(){if(!$("#modal").hidden){closeModal();return}if(!$("#menu").hidden){closeMenu();return}
+  if(S.view==="request"){go("login");return}if(!S.user||S.view==="home"||S.view==="login"){ACT.exitAsk();return}
+  if(S.view==="review"&&!A.edit&&!confirm("Leave without saving this study?"))return;
+  const t=backTarget();if(t==="study"&&!S.study)go("studies");else if(t)go(t);else go("home")}
+
+/* ===== More icons ===== */
+Object.assign(ICONS,{clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>',film:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 5v14M17 5v14M3 9.5h4M3 14.5h4M17 9.5h4M17 14.5h4"/>',
+  chart:'<path d="M4 20V4M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/>',merge:'<path d="M6 4v5a5 5 0 0 0 5 5h7M15 11l3 3-3 3"/><path d="M6 20v-3"/>',plus:'<path d="M12 5v14M5 12h14"/>',
+  cut:'<circle cx="6" cy="7" r="2.5"/><circle cx="6" cy="17" r="2.5"/><path d="M8 8.5 20 17M8 15.5 20 7"/>',hand:'<path d="M7 21v-6.5L4.6 11a1.6 1.6 0 0 1 2.6-1.8L9 11.5V4.5a1.5 1.5 0 0 1 3 0V10m0-4.5a1.5 1.5 0 0 1 3 0V10m0-3a1.5 1.5 0 0 1 3 0v7c0 3.5-2 7-6 7"/>'});
+
+/* ===== Boot ===== */
+if(location.search.indexOf("lstest")>=0)window.__ls={S,A,NS,DB,KV,go,render,ACT,approvalFor,Pend,Users,analyzeHands,studyStats,lineCalc,mergePack,get player(){return player}};
+(async()=>{
+  app.innerHTML=`<section class="panel"><p class="note">Loading…</p></section>`;
+  await KV.open();await Users.load();await DB.load();
+  try{if(!NATIVE&&navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+  let sid=null;try{sid=localStorage.getItem("ls.session")}catch(e){}
+  const su=sid&&Users.list.find(u=>u.id===sid&&u.active!==false);if(su)S.user={id:su.id,name:su.name,role:su.role};
+  S.view=S.user?"home":"login";renderUserbar();
+  if(NATIVE&&NP.App&&NP.App.addListener)try{NP.App.addListener("backButton",onBack)}catch(e){}
+  render();if(S.user)Hands.load().catch(()=>{});
+})();
+</script>
+</body>
+</html>

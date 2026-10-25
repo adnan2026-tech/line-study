@@ -1,0 +1,14 @@
+{
+  "appId": "com.adnan.linestudy",
+  "appName": "Line Study",
+  "webDir": "www",
+  "android": {
+    "webContentsDebuggingEnabled": true
+  },
+  "plugins": {
+    "SystemBars": {
+      "style": "DARK",
+      "initialViewportFitValueHint": "cover"
+    }
+  }
+}
